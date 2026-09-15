@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>概念 B · 乐谱式 — The Silent Orchestra</title>
+<style>
+:root{
+  --hall:#080a12; --hall2:#0d1120; --stage:#141a2e;
+  --ink:#f2ece0; --ink-dim:#9aa0b4; --ink-faint:#5d6478;
+  --amber:#e8b25c; --amber-hot:#ffd08a;
+  --line:#232a44; --line-soft:#1a2038;
+  --alive:#7fd8b0; --fading:#e89a5c; --gone:#8a5c72; --unknown:#4a5270;
+  --cr:#f0837f; --en:#e8a25c; --vu:#e0c86a;
+  --serif: "Songti SC","Source Han Serif SC","Noto Serif CJK SC",Georgia,serif;
+  --sans: "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono: ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--hall);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+
+.page-header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 40px 12px;
+  background:linear-gradient(180deg,rgba(8,10,18,.98) 0%,rgba(8,10,18,.88) 80%,transparent);
+  display:flex;align-items:flex-end;justify-content:space-between;
+}
+.page-header h1{font-family:var(--serif);font-weight:400;font-size:18px;letter-spacing:.03em}
+.page-header h1 .concept{
+  display:block;font-family:var(--mono);font-size:9px;letter-spacing:.28em;color:var(--amber);
+  text-transform:uppercase;margin-bottom:3px;
+}
+.page-header .hint{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);letter-spacing:.1em}
+
+.score-area{
+  position:fixed;top:58px;left:0;right:0;bottom:36px;
+  overflow:auto;padding:20px 40px 40px;
+}
+
+/* --- single score grid: label | plot | time axis --- */
+.score-grid{
+  display:grid;
+  grid-template-columns:100px 1fr;
+  grid-template-rows: repeat(5, 110px) 32px;
+  gap:0;
+  min-width:1200px;
+}
+
+/* Labels column */
+.stave-label{
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-end;
+  padding-right:14px;border-right:1px solid var(--line);
+}
+.stave-label .zh{font-family:var(--serif);font-size:14px;color:var(--ink-dim);letter-spacing:.06em}
+.stave-label .en{font-family:var(--mono);font-size:8px;color:var(--ink-faint);letter-spacing:.16em;text-transform:uppercase;margin-top:3px}
+.stave-label .cnt{font-family:var(--mono);font-size:9px;color:var(--amber);margin-top:6px;letter-spacing:.1em}
+
+/* Plot cells — relative container for absolute notes */
+.stave-plot{
+  position:relative;
+  border-bottom:1px solid var(--line-soft);
+  overflow:visible;
+}
+/* five staff lines */
+.stave-plot .line{
+  position:absolute;left:0;right:0;height:1px;background:var(--line-soft);
+}
+.stave-plot .line:nth-child(1){top:10px}
+.stave-plot .line:nth-child(2){top:30px}
+.stave-plot .line:nth-child(3){top:50px}
+.stave-plot .line:nth-child(4){top:70px}
+.stave-plot .line:nth-child(5){top:90px}
+
+/* gridlines inside plots */
+.gridline{
+  position:absolute;top:0;bottom:0;width:1px;background:var(--line-soft);opacity:.25;
+}
+
+/* clef */
+.stave-plot .clef{
+  position:absolute;left:4px;top:10px;font-size:36px;color:var(--ink-faint);opacity:.25;
+  font-family:serif;user-select:none;
+}
+
+/* Notes */
+.note{
+  position:absolute;transform:translate(-50%,-50%);
+  cursor:pointer;transition:transform .25s,filter .25s;z-index:2;
+}
+.note:hover{transform:translate(-50%,-50%) scale(1.3);filter:brightness(1.3);z-index:10}
+.note-dot{
+  border-radius:50%;box-shadow:0 0 8px -2px currentColor;
+  transition:box-shadow .3s;
+}
+.note:hover .note-dot{box-shadow:0 0 16px -2px currentColor}
+.note-label{
+  position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);
+  font-family:var(--serif);font-size:10px;color:var(--ink-dim);
+  white-space:nowrap;text-align:center;pointer-events:none;
+  opacity:0;transition:opacity .2s;
+}
+.note:hover .note-label{opacity:1}
+.note-spark{
+  position:absolute;top:calc(100% + 18px);left:50%;transform:translateX(-50%);
+  width:80px;height:18px;pointer-events:none;
+  opacity:0;transition:opacity .3s;
+}
+.note:hover .note-spark{opacity:1}
+.note-spark svg{width:100%;height:100%}
+
+/* Time axis row — spans both columns */
+.time-axis{
+  position:relative;
+  grid-column: 2;
+  border-top:1px solid var(--line);
+}
+.time-axis .tick{
+  position:absolute;top:0;width:1px;height:8px;background:var(--line);
+}
+.time-axis .tick.major{height:14px;background:var(--ink-faint)}
+.time-axis .tlabel{
+  position:absolute;top:16px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.06em;
+  white-space:nowrap;
+}
+
+.tip{
+  position:fixed;z-index:200;padding:10px 14px;
+  background:rgba(14,19,34,.96);border:1px solid var(--line);
+  border-radius:4px;pointer-events:none;opacity:0;transition:opacity .2s;
+  backdrop-filter:blur(12px);max-width:240px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.tip.show{opacity:1}
+.tip .tzh{font-family:var(--serif);font-size:14px;color:var(--ink)}
+.tip .ten{font-size:10px;color:var(--ink-dim);margin-top:2px}
+.tip .tiucn{font-family:var(--mono);font-size:9px;margin-top:6px;letter-spacing:.1em}
+.tip .tval{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:2px}
+.tip .trend{font-family:var(--mono);font-size:9px;color:var(--ink-faint);margin-top:3px}
+
+.legend{
+  position:fixed;bottom:0;left:0;right:0;z-index:90;
+  display:flex;align-items:center;justify-content:center;gap:28px;
+  padding:10px 40px;
+  background:linear-gradient(0deg,rgba(8,10,18,.96),transparent);
+  font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.1em;
+}
+.legend .d{display:inline-block;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  opacity:.3;mix-blend-mode:overlay;
+  background-image:radial-gradient(rgba(255,255,255,.05) .5px, transparent .5px);
+  background-size:3px 3px;
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>
+    <span class="concept">Concept B · Prototype</span>
+    乐谱式 · 五线谱上的物种音符
+  </h1>
+  <div class="hint">hover 音符查看详情</div>
+</div>
+
+<div class="score-area" id="scoreArea">
+  <div class="score-grid" id="scoreGrid"></div>
+</div>
+
+<div class="tip" id="tip">
+  <div class="tzh"></div>
+  <div class="ten"></div>
+  <div class="tiucn"></div>
+  <div class="tval"></div>
+  <div class="trend"></div>
+</div>
+
+<div class="legend">
+  <span><span class="d" style="background:var(--cr);width:8px;height:8px"></span>CR 极危</span>
+  <span><span class="d" style="background:var(--en);width:8px;height:8px"></span>EN 濒危</span>
+  <span><span class="d" style="background:var(--vu);width:8px;height:8px"></span>VU 易危</span>
+  <span style="margin-left:16px;color:var(--ink-dim)">圆点大小 ∝ 种群数量</span>
+</div>
+
+<script>
+const ORCHESTRA=[
+  {id:"bluewhale",section:"contrabass",zh:"蓝鲸",en:"Blue whale",sci:"Balaenoptera musculus",iucn:"EN",trend:"recovering",
+   points:[{year:1981,value:453},{year:1988,value:559},{year:1998,value:2280}]},
+  {id:"rightwhale",section:"contrabass",zh:"北大西洋露脊鲸",en:"N. Atlantic right whale",sci:"Eubalaena glacialis",iucn:"CR",trend:"declining",
+   points:[{year:2023,value:372}]},
+  {id:"bustard",section:"contrabass",zh:"大鸨",en:"Great Bustard",sci:"Otis tarda",iucn:"EN",trend:"declining",
+   points:[{year:2010,value:50500},{year:2022,value:33500},{year:2026,value:31300}]},
+  {id:"bengal-florican",section:"contrabass",zh:"孟加拉鸨",en:"Bengal Florican",sci:"Houbaropsis bengalensis",iucn:"CR",trend:"declining",
+   points:[{year:2006,value:416},{year:2012,value:216},{year:2018,value:104}]},
+  {id:"asianelephant",section:"contrabass",zh:"亚洲象",en:"Asian Elephant",sci:"Elephas maximus",iucn:"EN",trend:"declining",
+   points:[{year:2018,value:50000}]},
+  {id:"tiger",section:"brass",zh:"虎",en:"Tiger",sci:"Panthera tigris",iucn:"EN",trend:"recovering",
+   points:[{year:1973,value:1827},{year:2006,value:1411},{year:2010,value:1706},{year:2014,value:2226},{year:2018,value:2967},{year:2022,value:3682}]},
+  {id:"lion",section:"brass",zh:"非洲狮",en:"African Lion",sci:"Panthera leo",iucn:"VU",trend:"declining",
+   points:[{year:2002,value:37945},{year:2006,value:33160},{year:2013,value:32000},{year:2023,value:22500}]},
+  {id:"cheetah",section:"brass",zh:"猎豹",en:"Cheetah",sci:"Acinonyx jubatus",iucn:"VU",trend:"declining",
+   points:[{year:1999,value:1520},{year:2015,value:160}]},
+  {id:"stork",section:"brass",zh:"东方白鹳",en:"Oriental Stork",sci:"Ciconia boyciana",iucn:"EN",trend:"declining",
+   points:[{year:2000,value:3000},{year:2018,value:1750}]},
+  {id:"green-peafowl",section:"brass",zh:"绿孔雀",en:"Green Peafowl",sci:"Pavo muticus",iucn:"EN",trend:"declining",
+   points:[{year:1995,value:950},{year:2016,value:210}]},
+  {id:"hainan-peacockpheasant",section:"brass",zh:"海南孔雀雉",en:"Hainan Peacock-pheasant",sci:"Polyplectron katsumatae",iucn:"EN",trend:"declining",
+   points:[{year:1990,value:2775},{year:2000,value:300}]},
+  {id:"kakapo",section:"solo",zh:"鸮鹦鹉",en:"Kākāpō",sci:"Strigops habroptila",iucn:"CR",trend:"recovering",
+   points:[{year:2026,value:325}]},
+  {id:"scalysided-merganser",section:"solo",zh:"中华秋沙鸭",en:"Scaly-sided Merganser",sci:"Mergus squamatus",iucn:"EN",trend:"declining",
+   points:[{year:1982,value:1000},{year:2012,value:448}]},
+  {id:"emberiza",section:"woodwind",zh:"黄胸鹀",en:"Yellow-breasted bunting",sci:"Emberiza aureola",iucn:"CR",trend:"declining",
+   points:[{year:2013,value:12}]},
+  {id:"spoonbill",section:"woodwind",zh:"勺嘴鹬",en:"Spoon-billed sandpiper",sci:"Calidris pygmaea",iucn:"CR",trend:"declining",
+   points:[{year:2024,value:443}]},
+  {id:"saker-falcon",section:"woodwind",zh:"猎隼",en:"Saker Falcon",sci:"Falco cherrug",iucn:"EN",trend:"declining",
+   points:[{year:1990,value:22100},{year:2013,value:10500}]},
+  {id:"coral",section:"texture",zh:"珊瑚礁",en:"Coral reef",sci:"Reef-building corals",iucn:"—",trend:"tipping-risk",
+   points:[]},
+  {id:"bumblebee",section:"texture",zh:"熊蜂属",en:"Bumblebees",sci:"Bombus spp.",iucn:"—",trend:"declining",
+   points:[{year:1998,value:100},{year:2020,value:54}]},
+  {id:"vaquita",section:"texture",zh:"小头鼠海豚",en:"Vaquita",sci:"Phocoena sinus",iucn:"CR",trend:"declining",
+   points:[{year:1997,value:567},{year:2008,value:245},{year:2015,value:60},{year:2023,value:10},{year:2024,value:7}]},
+  {id:"whiteheaded-duck",section:"texture",zh:"白头硬尾鸭",en:"White-headed Duck",sci:"Oxyura leucocephala",iucn:"EN",trend:"declining",
+   points:[{year:1900,value:100000},{year:1996,value:20000},{year:2003,value:10500},{year:2017,value:7000}]}
+];
+
+const SECTIONS={
+  contrabass:{zh:"低音声部",en:"Contrabass",clef:"𝄞"},
+  brass:{zh:"铜管声部",en:"Brass",clef:"𝄞"},
+  solo:{zh:"独奏声部",en:"Solo",clef:"𝄞"},
+  woodwind:{zh:"木管声部",en:"Woodwind",clef:"𝄞"},
+  texture:{zh:"织体声部",en:"Texture",clef:"𝄞"}
+};
+const SECTION_ORDER=["contrabass","brass","solo","woodwind","texture"];
+const MIN_YEAR=1970, MAX_YEAR=2050;
+const MIN_R=6, MAX_R=28;
+
+const grouped={};
+SECTION_ORDER.forEach(s=>grouped[s]=[]);
+ORCHESTRA.forEach(sp=>{if(grouped[sp.section])grouped[sp.section].push(sp)});
+
+let globalMax=0;
+ORCHESTRA.forEach(sp=>sp.points.forEach(p=>{if(p.value>globalMax)globalMax=p.value}));
+
+function iucnColor(iucn){
+  if(iucn==="CR")return"var(--cr)";if(iucn==="EN")return"var(--en)";if(iucn==="VU")return"var(--vu)";
+  return"var(--ink-faint)";
+}
+function iucnColorRaw(iucn){
+  if(iucn==="CR")return"#f0837f";if(iucn==="EN")return"#e8a25c";if(iucn==="VU")return"#e0c86a";
+  return"#5d6478";
+}
+function formatNum(n){
+  if(n>=1e6)return(n/1e6).toFixed(1)+"M";if(n>=1e3)return(n/1e3).toFixed(1)+"K";return String(n);
+}
+function valueToR(val){
+  if(val<=0)return MIN_R;
+  return MIN_R+Math.sqrt(val/globalMax)*(MAX_R-MIN_R);
+}
+
+function buildScore(){
+  const grid=document.getElementById("scoreGrid");
+  grid.innerHTML="";
+  const plotWidth=grid.offsetWidth-100; // minus label column
+
+  SECTION_ORDER.forEach((secKey,si)=>{
+    const sec=SECTIONS[secKey];
+    const species=grouped[secKey];
+
+    // Label
+    const label=document.createElement("div");
+    label.className="stave-label";
+    label.innerHTML=`<div class="zh">${sec.zh}</div><div class="en">${sec.en}</div><div class="cnt">${species.length} 种</div>`;
+    grid.appendChild(label);
+
+    // Plot cell
+    const plot=document.createElement("div");
+    plot.className="stave-plot";
+    plot.style.height="110px";
+
+    // 5 staff lines
+    for(let i=1;i<=5;i++){
+      const l=document.createElement("div");
+      l.className="line";
+      plot.appendChild(l);
+    }
+
+    // Clef
+    const clef=document.createElement("div");
+    clef.className="clef";
+    clef.textContent=sec.clef;
+    plot.appendChild(clef);
+
+    // Gridlines
+    for(let yr=1980;yr<=2040;yr+=10){
+      const x=((yr-MIN_YEAR)/(MAX_YEAR-MIN_YEAR))*plotWidth;
+      const gl=document.createElement("div");
+      gl.className="gridline";
+      gl.style.left=x+"px";
+      plot.appendChild(gl);
+    }
+
+    // Notes — placed in the SAME coordinate system as gridlines
+    species.forEach((sp,pi)=>{
+      const pts=sp.points;
+      if(pts.length===0)return;
+
+      const lastPt=pts[pts.length-1];
+      const x=((lastPt.year-MIN_YEAR)/(MAX_YEAR-MIN_YEAR))*plotWidth;
+      const r=valueToR(lastPt.value);
+      const lineY=10+(pi/Math.max(species.length-1,1))*80;
+      const col=iucnColor(sp.iucn);
+
+      const note=document.createElement("div");
+      note.className="note";
+      note.style.left=x+"px";
+      note.style.top=lineY+"px";
+
+      const dot=document.createElement("div");
+      dot.className="note-dot";
+      dot.style.width=(r*2)+"px";
+      dot.style.height=(r*2)+"px";
+      dot.style.background=col;
+      dot.style.color=col;
+      note.appendChild(dot);
+
+      const lbl=document.createElement("div");
+      lbl.className="note-label";
+      lbl.textContent=sp.zh;
+      note.appendChild(lbl);
+
+      // Mini sparkline on hover
+      if(pts.length>=2){
+        const spark=document.createElement("div");
+        spark.className="note-spark";
+        const minYr=Math.min(...pts.map(p=>p.year));
+        const maxYr=Math.max(...pts.map(p=>p.year));
+        const minV=Math.min(...pts.map(p=>p.value));
+        const maxV=Math.max(...pts.map(p=>p.value));
+        const sx=yr=>2+((yr-minYr)/(maxYr-minYr||1))*76;
+        const sy=v=>16-((v-minV)/(maxV-minV||1))*14;
+        const ln=pts.map(p=>`${sx(p.year).toFixed(1)},${sy(p.value).toFixed(1)}`).join(" ");
+        spark.innerHTML=`<svg viewBox="0 0 80 18"><polyline points="${ln}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+        note.appendChild(spark);
+      }
+
+      note.addEventListener("mouseenter",()=>{
+        const tip=document.getElementById("tip");
+        tip.querySelector(".tzh").textContent=sp.zh+" · "+sp.en;
+        tip.querySelector(".ten").textContent=sp.sci;
+        tip.querySelector(".tiucn").innerHTML=`<span style="color:${col}">${sp.iucn!=="—"?sp.iucn:"—"}</span>`;
+        tip.querySelector(".tval").textContent=lastPt?`种群: ${formatNum(lastPt.value)} (${lastPt.year})`:"无定量数据";
+        tip.querySelector(".trend").textContent="趋势: "+(sp.trend==="declining"?"↓ 下降":sp.trend==="recovering"?"↑ 恢复":sp.trend);
+        tip.classList.add("show");
+      });
+      note.addEventListener("mousemove",e=>{
+        const tip=document.getElementById("tip");
+        tip.style.left=(e.clientX+16)+"px";
+        tip.style.top=(e.clientY-10)+"px";
+      });
+      note.addEventListener("mouseleave",()=>{document.getElementById("tip").classList.remove("show")});
+
+      plot.appendChild(note);
+    });
+
+    grid.appendChild(plot);
+  });
+
+  // Time axis (bottom row, spans label+plot)
+  const emptyLabel=document.createElement("div");
+  grid.appendChild(emptyLabel);
+
+  const axisDiv=document.createElement("div");
+  axisDiv.className="time-axis";
+  axisDiv.style.height="32px";
+  for(let yr=1970;yr<=2050;yr+=2){
+    const x=((yr-MIN_YEAR)/(MAX_YEAR-MIN_YEAR))*plotWidth;
+    const isMajor=yr%10===0;
+    const tick=document.createElement("div");
+    tick.className="tick"+(isMajor?" major":"");
+    tick.style.left=x+"px";
+    axisDiv.appendChild(tick);
+    if(isMajor||yr===1975||yr===1985||yr===1995||yr===2005||yr===2015||yr===2025||yr===2035||yr===2045){
+      const lbl=document.createElement("div");
+      lbl.className="tlabel";
+      lbl.style.left=x+"px";
+      lbl.textContent=yr;
+      axisDiv.appendChild(lbl);
+    }
+  }
+  grid.appendChild(axisDiv);
+}
+
+buildScore();
+window.addEventListener("resize",buildScore);
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>harness</title></head>
+<body style="background:#111;color:#eee;font-family:monospace">
+<iframe id="f" src="/index.html" style="width:1600px;height:900px;border:0"></iframe>
+<pre id="out">running...</pre>
+<script>
+const f = document.getElementById('f');
+f.onload = async () => {
+  try {
+    const doc = f.contentDocument;
+    const win = f.contentWindow;
+    await new Promise(r => setTimeout(r, 1800));
+    const rows = [...doc.querySelectorAll('.track-row')];
+    const lanes = [...doc.querySelectorAll('.section-lane')];
+    const laneAttrs = lanes.map(l => ({ dataSection: l.getAttribute('data-section'), hasStrip: !!l.querySelector('.species-strip') }));
+    const results = [];
+    for (const row of rows) {
+      const id = row.dataset.id;
+      const name = row.querySelector('.tr-name') ? row.querySelector('.tr-name').textContent : id;
+      row.click();
+      await new Promise(r => setTimeout(r, 350));
+      const detail = doc.getElementById('detailInline');
+      const opened = !!detail && detail.dataset.speciesId === id;
+      results.push({ id, name, opened });
+      if (opened) {
+        win.document.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+    document.getElementById('out').textContent = 'RESULT:' + JSON.stringify({ laneAttrs, results });
+  } catch (e) {
+    document.getElementById('out').textContent = 'EXC:' + e.message;
+  }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,1778 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>寂静的乐团 · The Silent Orchestra</title>
+<style>
+:root{
+  --hall:#080a12; --hall2:#0d1120; --stage:#141a2e;
+  --ink:#f2ece0; --ink-dim:#9aa0b4; --ink-faint:#5d6478;
+  --amber:#e8b25c; --amber-hot:#ffd08a;
+  --line:#232a44; --line-soft:#1a2038;
+  --alive:#7fd8b0; --fading:#e89a5c; --gone:#8a5c72; --unknown:#4a5270;
+  --cr:#f0837f; --en:#e8a25c; --vu:#e0c86a;
+  --serif: "Songti SC","Source Han Serif SC","Noto Serif CJK SC",Georgia,"Times New Roman",serif;
+  --sans: "PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono: ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--hall);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{min-height:100vh}
+
+/* --- ambient hall texture --- */
+.hall-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 118%, rgba(232,178,92,.13), transparent 62%),
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(58,74,132,.20), transparent 65%),
+    linear-gradient(180deg,#080a12 0%,#0b0f1c 45%,#111729 100%)}
+.hall-bg::after{content:"";position:absolute;inset:0;opacity:.5;mix-blend-mode:overlay;
+  background-image:radial-gradient(rgba(255,255,255,.055) .5px, transparent .5px);
+  background-size:3px 3px}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  box-shadow:inset 0 0 240px 70px rgba(0,0,0,.82)}
+
+/* --- curtain / opening --- */
+#curtain{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+  background:transparent;pointer-events:none}
+#curtain:not(.up){pointer-events:auto}
+#curtain.up{visibility:hidden;pointer-events:none}
+
+/* curtain halves */
+.curtain-left,.curtain-right{
+  position:absolute;top:0;bottom:0;width:50%;
+  background:radial-gradient(ellipse 100% 80% at 50% 50%,#131a2e 0%,#080a12 72%);
+  z-index:1;transition:none;
+  background-image:
+    radial-gradient(ellipse 100% 80% at 50% 50%,#131a2e 0%,#080a12 72%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0px,transparent 2px,transparent 18px);
+  background-size:100% 100%,18px 100%}
+.curtain-left{left:0;border-right:1px solid rgba(232,178,92,.12);
+  transform-origin:left center}
+.curtain-right{right:0;border-left:1px solid rgba(232,178,92,.12);
+  transform-origin:right center}
+
+/* opening animation */
+.curtain-opening .curtain-left{animation:curtainOpenLeft 2.8s cubic-bezier(.25,.46,.45,.94) forwards}
+.curtain-opening .curtain-right{animation:curtainOpenRight 2.8s cubic-bezier(.25,.46,.45,.94) forwards}
+
+@keyframes curtainOpenLeft{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-105%)}
+}
+@keyframes curtainOpenRight{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(105%)}
+}
+
+#begin{margin-top:46px;background:none;border:1px solid var(--amber);color:var(--amber-hot);
+  font-family:var(--serif);font-size:18px;letter-spacing:.24em;padding:16px 52px;cursor:pointer;
+  transition:transform .45s cubic-bezier(.16,.84,.3,1),opacity .45s ease;position:relative;z-index:3;pointer-events:auto;touch-action:manipulation}
+#begin:hover{background:var(--amber);color:#0a0c14;letter-spacing:.3em}
+#begin:focus-visible{outline:2px solid var(--amber-hot);outline-offset:4px}
+#begin.fading{transform:scale(.85);opacity:0;pointer-events:none}
+.card{position:relative;z-index:2;width:min(760px,92vw);text-align:center;padding:0 24px;pointer-events:auto;
+  transition:opacity .4s ease,transform .4s ease}
+.card.fading{opacity:0;transform:translateY(-10px);pointer-events:none}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+  color:var(--amber);opacity:.85;margin-bottom:30px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,6.6vw,74px);line-height:1.06;
+  margin:0 0 6px;letter-spacing:.015em}
+h1 .en{display:block;font-size:clamp(13px,1.5vw,17px);letter-spacing:.3em;color:var(--ink-faint);
+  margin-top:20px;text-transform:uppercase;font-family:var(--mono)}
+.lede{font-family:var(--serif);font-size:clamp(15px,1.8vw,18.5px);line-height:1.95;color:var(--ink-dim);
+  margin:38px auto 12px;max-width:585px;text-align:left;text-wrap:pretty}
+.lede b{color:var(--ink);font-weight:400;border-bottom:1px solid rgba(232,178,92,.42);padding-bottom:1px}
+.warn{margin:30px auto 0;max-width:585px;text-align:left;border-left:2px solid var(--amber);
+  padding:13px 17px;background:rgba(232,178,92,.055);font-size:13px;line-height:1.78;color:var(--ink-dim)}
+.warn b{color:var(--amber-hot);font-weight:500}
+.load-note{margin-top:20px;font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--ink-faint)}
+
+/* --- top bar --- */
+.topbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;
+  padding:24px clamp(18px,3.4vw,46px) 0;gap:22px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:16.5px;letter-spacing:.05em;color:var(--ink)}
+.brand span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.26em;
+  color:var(--ink-faint);margin-top:5px;text-transform:uppercase}
+.yearblock{text-align:center;flex:1;min-width:210px}
+.year{font-family:var(--mono);font-size:clamp(52px,9.4vw,104px);line-height:.92;font-weight:200;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,var(--amber-hot),#b98536);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.era{font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:var(--ink-faint);
+  margin-top:2px;text-transform:uppercase;min-height:13px}
+.lpi{text-align:right;font-size:11.5px;line-height:1.62;color:var(--ink-faint);max-width:265px}
+.lpi .big{font-family:var(--mono);font-size:25px;color:var(--fading);display:block;
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.lpi a{color:var(--ink-dim);text-decoration:none;border-bottom:1px dotted var(--line)}
+.lpi a:hover{color:var(--amber)}
+
+/* --- track rows --- */
+.tracks-wrap{position:relative;z-index:4;max-width:1280px;margin:0 auto;
+  padding:18px clamp(12px,2.6vw,40px) 0}
+.tracks{display:flex;flex-direction:column;gap:3px}
+.track-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 16px;
+  background:rgba(20,26,46,.45);
+  border:1px solid var(--line-soft);border-left:3px solid transparent;
+  border-radius:4px;cursor:pointer;
+  transition:background .4s,border-color .4s,opacity .4s,transform .3s,box-shadow .4s;
+  user-select:none;position:relative}
+.track-row:hover{background:rgba(20,26,46,.75);border-color:var(--line)}
+.track-row.lit{border-left-color:var(--amber);background:rgba(232,178,92,.04);
+  box-shadow:inset 0 0 24px -12px rgba(232,178,92,.18)}
+.track-row.silent{opacity:.5}
+.track-row:focus-visible{outline:2px solid var(--amber-hot);outline-offset:2px}
+.track-row.dragging{opacity:.25;transform:scale(.97)}
+.track-row.drag-over{border-top:2px solid var(--amber);padding-top:8px}
+.tr-handle{flex-shrink:0;cursor:grab;color:var(--ink-faint);font-size:13px;line-height:1;
+  padding:6px 2px;opacity:.35;transition:opacity .2s;letter-spacing:-1px}
+.track-row:hover .tr-handle{opacity:.75}
+.tr-handle:active{cursor:grabbing}
+.tr-port{position:relative;width:46px;height:46px;flex-shrink:0;border-radius:50%;overflow:hidden;
+  border:1.5px solid var(--line);filter:saturate(.45) brightness(.42) contrast(1.05);
+  transition:filter .9s,border-color .9s;background:#0e1322}
+.tr-port img{width:100%;height:100%;object-fit:cover;display:block}
+.track-row.lit .tr-port{filter:saturate(1.02) brightness(1) contrast(1.02);border-color:rgba(232,178,92,.5)}
+.track-row.silent .tr-port{filter:saturate(0) brightness(.24) contrast(.9)}
+.tr-halo{position:absolute;inset:-7px;border-radius:50%;pointer-events:none;
+  opacity:0;transition:opacity .7s;box-shadow:0 0 18px 3px rgba(232,178,92,.42)}
+.track-row.lit .tr-halo{opacity:.85}
+.tr-info{flex:0 0 auto;min-width:0;max-width:170px}
+.tr-name{font-family:var(--serif);font-size:14px;letter-spacing:.03em;color:var(--ink-dim);
+  transition:color .6s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-row.lit .tr-name{color:var(--ink)}
+.tr-sci{font-family:var(--serif);font-style:italic;font-size:10.5px;color:var(--ink-faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:.14em;
+  padding:1.5px 5px;border:1px solid currentColor;border-radius:2px;flex-shrink:0}
+.t-CR{color:#f0837f} .t-EN{color:#e8a25c} .t-VU{color:#e0c86a}
+.t-NT{color:#9dc98a} .t-LC{color:#7fd8b0} .t--{color:var(--ink-faint)}
+.tr-spark{flex:1 1 100px;height:34px;min-width:60px}
+.tr-spark svg{width:100%;height:100%;display:block}
+.sp-area{fill:var(--alive);fill-opacity:.1;transition:fill .8s}
+.sp-fg{fill:none;stroke:var(--alive);stroke-width:2;stroke-linejoin:round;transition:stroke .8s}
+.sp-bg{fill:none;stroke:var(--line);stroke-width:1.2;stroke-linejoin:round}
+.tr-metric{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-faint);
+  font-variant-numeric:tabular-nums;white-space:nowrap;min-width:68px;text-align:right;flex-shrink:0}
+.track-row.lit .tr-metric{color:var(--amber)}
+.tr-bars{display:flex;gap:1.5px;align-items:flex-end;height:14px;width:24px;flex-shrink:0}
+.tr-bars i{width:2px;background:var(--amber);opacity:.5;height:1px;border-radius:1px;
+  transition:height .1s linear}
+.solo-track-btn{flex-shrink:0;padding:4px 10px;background:rgba(13,17,32,.96);
+  border:1px solid var(--line);color:var(--ink-faint);font:9px var(--mono);letter-spacing:.12em;
+  white-space:nowrap;cursor:pointer;transition:.25s}
+.solo-track-btn:hover,.solo-track-btn.active{border-color:var(--amber);color:var(--amber-hot);
+  background:rgba(232,178,92,.08)}
+.drag-ghost{border-radius:4px;box-shadow:0 10px 40px rgba(0,0,0,.55);
+  border:1px solid var(--amber)!important;background:var(--stage)!important}
+.conductor{text-align:center;padding:28px 0 8px}
+.baton{width:1px;height:34px;margin:0 auto;
+  background:linear-gradient(180deg,transparent,var(--amber));
+  opacity:.5;transform-origin:bottom center}
+.playing .baton{animation:conduct 2.05s ease-in-out infinite}
+@keyframes conduct{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}}
+.podium-txt{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--ink-faint);
+  text-transform:uppercase;margin-top:8px}
+
+/* --- transport --- */
+.transport{position:relative;z-index:5;max-width:1280px;margin:6px auto 0;
+  padding:20px clamp(12px,2.6vw,40px) 30px}
+.track{position:relative;height:46px;margin-bottom:8px}
+.axis{position:absolute;top:23px;left:0;right:0;height:1px;background:var(--line)}
+.axis-fill{position:absolute;top:23px;left:0;height:1px;background:linear-gradient(90deg,var(--amber),var(--amber-hot));
+  box-shadow:0 0 9px rgba(232,178,92,.55)}
+.tick{position:absolute;top:23px;width:1px;height:6px;background:var(--line);transform:translateY(-2px)}
+.tick.major{height:11px;background:var(--ink-faint);transform:translateY(-5px)}
+.tick-lab{position:absolute;top:34px;font-family:var(--mono);font-size:9px;color:var(--ink-faint);
+  transform:translateX(-50%);letter-spacing:.08em}
+.datawin{position:absolute;top:19px;height:9px;background:rgba(127,216,176,.14);
+  border-left:1px solid rgba(127,216,176,.4);border-right:1px solid rgba(127,216,176,.4);border-radius:1px}
+.head{position:absolute;top:11px;width:2px;height:25px;background:var(--amber-hot);
+  box-shadow:0 0 12px 2px rgba(255,208,138,.75);transform:translateX(-1px);pointer-events:none}
+#scrub{position:absolute;top:0;left:0;width:100%;height:46px;margin:0;opacity:0;cursor:ew-resize}
+.controls{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+button.ctl{background:none;border:1px solid var(--line);color:var(--ink-dim);font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.17em;padding:9px 17px;cursor:pointer;transition:.3s;text-transform:uppercase}
+button.ctl:hover{border-color:var(--amber);color:var(--amber-hot)}
+button.ctl.on{border-color:var(--amber);color:var(--amber-hot);background:rgba(232,178,92,.09)}
+.vol{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:10px;
+  color:var(--ink-faint);letter-spacing:.14em}
+input[type=range].v{-webkit-appearance:none;appearance:none;width:96px;height:1px;background:var(--line);
+  outline:none;cursor:pointer}
+input[type=range].v::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;
+  background:var(--amber);cursor:pointer}
+input[type=range].v::-moz-range-thumb{width:11px;height:11px;border:none;border-radius:50%;background:var(--amber)}
+.legend{display:flex;gap:17px;flex-wrap:wrap;font-family:var(--mono);font-size:9.5px;
+  color:var(--ink-faint);letter-spacing:.1em;margin-left:auto}
+.legend i{display:inline-block;width:16px;height:2px;vertical-align:middle;margin-right:6px}
+
+/* --- notes (hidden, replaced by overlay) --- */
+.notes{display:none!important}
+.notes h2{font-family:var(--serif);font-weight:400;font-size:21px;margin:0 0 6px;letter-spacing:.03em}
+.notes .sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;color:var(--ink-faint);
+  text-transform:uppercase;margin-bottom:26px}
+.ncols{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:26px 34px}
+.ncol h3{font-family:var(--mono);font-size:10px;letter-spacing:.19em;color:var(--amber);
+  text-transform:uppercase;margin:0 0 11px;font-weight:400}
+.ncol p{font-size:12.8px;line-height:1.87;color:var(--ink-dim);margin:0 0 11px;text-wrap:pretty}
+.ncol p b{color:var(--ink);font-weight:500}
+.ncol ul{margin:0;padding-left:15px;font-size:12.3px;line-height:1.8;color:var(--ink-dim)}
+.ncol li{margin-bottom:7px}
+.ncol a{color:var(--ink-dim);border-bottom:1px dotted var(--line)}
+.ncol a:hover{color:var(--amber)}
+
+/* --- drawer --- */
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(452px,94vw);z-index:80;
+  background:linear-gradient(180deg,#0e1322,#0a0d18);border-left:1px solid var(--line);
+  transform:translateX(102%);transition:transform .6s cubic-bezier(.16,.84,.3,1);
+  overflow-y:auto;box-shadow:-30px 0 70px rgba(0,0,0,.62)}
+#drawer.open{transform:none}
+.dhead{position:relative;height:212px;overflow:hidden;border-bottom:1px solid var(--line)}
+.dhead img{width:100%;height:100%;object-fit:cover}
+.dhead .grad{position:absolute;inset:0;background:linear-gradient(180deg,transparent 26%,#0b0f1b 97%)}
+.dclose{position:absolute;top:14px;right:14px;z-index:3;background:rgba(8,10,18,.76);border:1px solid var(--line);
+  color:var(--ink-dim);width:31px;height:31px;cursor:pointer;font-size:15px;line-height:1;
+  backdrop-filter:blur(4px)}
+.dclose:hover{color:var(--amber);border-color:var(--amber)}
+.dtitle{position:absolute;left:22px;bottom:15px;z-index:2}
+.dtitle .zh{font-family:var(--serif);font-size:26px;letter-spacing:.02em}
+.dtitle .sci{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--ink-dim);margin-top:3px}
+.dbody{padding:22px}
+.drow{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--line-soft);
+  font-size:12.4px;line-height:1.6}
+.drow .k{color:var(--ink-faint);flex-shrink:0;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.13em;text-transform:uppercase;padding-top:2px}
+.drow .v{text-align:right;color:var(--ink)}
+.drow .v em{font-style:normal;font-family:var(--mono);color:var(--amber);font-variant-numeric:tabular-nums}
+.dsec{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--amber);text-transform:uppercase;
+  margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.series{margin-top:4px}
+.spt{display:flex;align-items:baseline;gap:11px;font-size:12.2px;padding:7px 0;
+  border-bottom:1px dotted var(--line-soft)}
+.spt .y{font-family:var(--mono);color:var(--amber);width:42px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.spt .v{font-family:var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.spt .n{color:var(--ink-faint);font-size:11px;line-height:1.55}
+.badge{display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:.1em;padding:1px 4px;
+  border:1px solid currentColor;border-radius:2px;margin-left:5px;vertical-align:1px}
+.b-measured{color:var(--alive)} .b-modelled{color:#8ab4e8} .b-index{color:#c8a2e0}
+.b-projected{color:var(--fading)}
+.cred{font-size:11.2px;line-height:1.75;color:var(--ink-faint);margin-top:9px}
+.cred b{color:var(--ink-dim);font-weight:500}
+.cred a{color:var(--ink-faint);border-bottom:1px dotted var(--line)}
+.audition{width:100%;margin-top:16px;background:none;border:1px solid var(--amber);color:var(--amber-hot);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.19em;padding:12px;cursor:pointer;
+  text-transform:uppercase;transition:.3s}
+.audition:hover{background:var(--amber);color:#0a0c14}
+.altered{background:rgba(232,154,92,.12);border-left:2px solid var(--fading);padding:10px 13px;
+  font-size:11.6px;line-height:1.72;color:var(--ink-dim);margin-top:12px}
+.altered b{color:var(--fading);font-weight:500}
+.foot{position:relative;z-index:4;text-align:center;padding:0 20px 44px;font-family:var(--mono);
+  font-size:9.5px;letter-spacing:.15em;color:var(--ink-faint);line-height:2.1}
+.foot a{color:var(--ink-faint);border-bottom:1px dotted var(--line)}
+.foot a:hover{color:var(--amber)}
+
+/* --- responsive --- */
+@media (max-width:900px){
+  .track-row{flex-wrap:wrap;gap:8px;padding:10px 12px}
+  .tr-handle{display:none}
+  .tr-port{width:40px;height:40px}
+  .tr-info{flex:1;max-width:none}
+  .tr-spark{flex-basis:100%;order:10;height:26px}
+  .tr-bars{display:none}
+  .solo-track-btn{font-size:8px;padding:3px 7px}
+  .lpi{text-align:left;max-width:none}
+  .legend{margin-left:0}
+  .conductor{padding:18px 0 4px}
+}
+@media (max-width:600px){
+  .track-row{gap:6px;padding:8px 10px}
+  .tr-port{width:34px;height:34px}
+  .tr-name{font-size:12.5px}
+  .tr-sci{font-size:9.5px}
+  .tr-metric{font-size:9px;min-width:50px}
+  .tag{font-size:7px;padding:1px 3px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important}
+}
+#audhint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99;
+  background:rgba(16,18,24,.94);border:1px solid var(--amber);color:var(--amber-hot);
+  padding:10px 20px;font-size:12.5px;letter-spacing:.08em;border-radius:3px;
+  display:none;cursor:pointer;box-shadow:0 6px 28px rgba(0,0,0,.55)}
+#audhint.show{display:block}
+
+/* --- horizontal scroll layout --- */
+html,body{overflow:hidden;height:100vh}
+
+.timeline-ruler{position:fixed;bottom:90px;left:0;right:0;z-index:99;height:48px;
+  background:rgba(8,10,18,.95);backdrop-filter:blur(8px);
+  border-top:1px solid var(--line-soft);display:flex;align-items:flex-end;
+  overflow:hidden;padding:0 clamp(18px,3.4vw,46px)}
+.ruler-labels{position:relative;height:100%;width:100%}
+.ruler-labels .rl-tick{position:absolute;bottom:0;width:1px;height:8px;background:var(--line)}
+.ruler-labels .rl-tick.major{height:14px;background:var(--ink-faint)}
+.ruler-labels .rl-lbl{position:absolute;bottom:18px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.06em;
+  white-space:nowrap;font-variant-numeric:tabular-nums}
+.ruler-labels .rl-lbl.major{bottom:16px;font-size:12px;color:var(--ink-dim)}
+.ruler-cursor{position:absolute;bottom:0;width:2px;height:20px;
+  background:var(--amber-hot);box-shadow:0 0 10px 2px rgba(255,208,138,.6);
+  transform:translateX(-1px);transition:left .15s linear;z-index:5}
+
+.scroll-wrap{position:fixed;top:139px;left:0;right:0;bottom:138px;
+  overflow-x:auto;overflow-y:auto;cursor:grab;z-index:4;user-select:none;
+  scrollbar-width:thin;scrollbar-color:rgba(232,178,92,.5) rgba(20,26,46,.5)}
+.scroll-wrap::-webkit-scrollbar{width:8px;height:8px}
+.scroll-wrap::-webkit-scrollbar-track{background:rgba(20,26,46,.5);border-radius:4px}
+.scroll-wrap::-webkit-scrollbar-thumb{background:rgba(232,178,92,.5);border-radius:4px;
+  transition:background .2s}
+.scroll-wrap::-webkit-scrollbar-thumb:hover{background:rgba(232,178,92,.75)}
+.scroll-wrap:active{cursor:grabbing}
+.scroll-inner{display:flex;flex-direction:column;height:100%;min-width:max-content}
+
+.section-lane{display:flex;flex-direction:row;border-bottom:1px solid var(--line-soft);
+  position:relative;flex-shrink:0;flex:1;min-height:120px}
+.section-lane:last-child{border-bottom:none}
+.section-title{position:sticky;left:0;top:0;z-index:10;width:140px;min-width:140px;
+  height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:linear-gradient(135deg,rgba(20,26,46,.97),rgba(13,17,32,.99));
+  border-right:1px solid var(--line);padding:16px 12px;text-align:center;flex-shrink:0}
+.section-title .sec-zh{font-family:var(--serif);font-size:14px;
+  letter-spacing:.08em;color:var(--ink-faint);margin-bottom:4px;opacity:.7}
+.section-title .sec-en{font-family:var(--mono);font-size:7.5px;letter-spacing:.22em;
+  color:var(--amber);text-transform:uppercase;opacity:.45}
+.section-title .sec-count{font-family:var(--mono);font-size:8px;color:var(--ink-faint);
+  margin-top:4px;opacity:.4}
+.section-title .sec-desc{font-family:var(--serif);font-size:9px;color:var(--ink-faint);
+  margin-top:4px;line-height:1.5;opacity:.35}
+
+.species-strip{display:flex;flex-direction:row;align-items:center;
+  justify-content:space-evenly;gap:0;padding:0 16px;min-width:3840px}
+.track-row{display:flex;flex-direction:column;align-items:center;gap:1px;
+  width:150px;min-width:150px;padding:6px 4px 5px;
+  background:rgba(20,26,46,.3);border:1px solid transparent;border-radius:6px;
+  cursor:pointer;transition:background .3s,border-color .4s,opacity .4s;
+  user-select:none;position:relative;overflow:hidden}
+.track-row:hover{background:rgba(20,26,46,.65);border-color:var(--line)}
+.track-row.lit{border-color:rgba(232,178,92,.35);background:rgba(232,178,92,.04);
+  box-shadow:inset 0 0 20px -12px rgba(232,178,92,.15)}
+.track-row.silent{opacity:.45}
+.track-row.dragging{opacity:.2;transform:scale(.97)}
+.track-row.drag-over{border-top:2px solid var(--amber);padding-top:8px}
+.tr-handle{position:absolute;top:3px;right:5px;cursor:grab;color:var(--ink-faint);font-size:10px;line-height:1;
+  padding:2px;opacity:.35;transition:opacity .2s;letter-spacing:-1px;z-index:2}
+.track-row:hover .tr-handle{opacity:.75}
+.tr-handle:active{cursor:grabbing}
+.tr-port{position:relative;width:30px;height:30px;flex-shrink:0;border-radius:50%;overflow:hidden;
+  border:1.5px solid var(--line);filter:saturate(.45) brightness(.42) contrast(1.05);
+  transition:filter .9s,border-color .9s;background:#0e1322}
+.tr-port img{width:100%;height:100%;object-fit:cover;display:block}
+.track-row.lit .tr-port{filter:saturate(1.02) brightness(1) contrast(1.02);border-color:rgba(232,178,92,.5)}
+.track-row.silent .tr-port{filter:saturate(0) brightness(.24) contrast(.9)}
+.tr-halo{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:38px;height:38px;border-radius:50%;pointer-events:none;
+  opacity:0;transition:opacity .7s;box-shadow:0 0 14px 3px rgba(232,178,92,.42)}
+.track-row.lit .tr-halo{opacity:.8}
+.tr-info{flex:0 0 auto;min-width:0;max-width:140px;text-align:center}
+.tr-name{font-family:var(--serif);font-size:11.5px;letter-spacing:.03em;color:var(--ink-dim);
+  transition:color .6s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;line-height:1.2}
+.track-row.lit .tr-name{color:var(--ink)}
+.tr-sci{font-family:var(--serif);font-style:italic;font-size:8.5px;color:var(--ink-faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;line-height:1.2}
+.tag{display:inline-block;font-family:var(--mono);font-size:7px;letter-spacing:.12em;
+  padding:1px 4px;border:1px solid currentColor;border-radius:2px;flex-shrink:0}
+.tr-spark{flex:0 0 auto;width:120px;height:14px}
+.tr-spark svg{width:100%;height:100%;display:block}
+.sp-area{fill:var(--alive);fill-opacity:.1;transition:fill .8s}
+.sp-fg{fill:none;stroke:var(--alive);stroke-width:2;stroke-linejoin:round;transition:stroke .8s}
+.sp-bg{fill:none;stroke:var(--line);stroke-width:1.2;stroke-linejoin:round}
+.tr-metric{font-family:var(--mono);font-size:8px;letter-spacing:.04em;color:var(--ink-faint);
+  font-variant-numeric:tabular-nums;white-space:nowrap;text-align:center;flex-shrink:0;line-height:1.15}
+.track-row.lit .tr-metric{color:var(--amber)}
+.tr-bars{display:none}
+.solo-track-btn{flex-shrink:0;width:100%;padding:1px 4px;background:rgba(13,17,32,.96);
+  border:1px solid var(--line);color:var(--ink-faint);font:6.5px var(--mono);letter-spacing:.1em;
+  white-space:nowrap;cursor:pointer;transition:.25s;text-align:center}
+.solo-track-btn:hover,.solo-track-btn.active{border-color:var(--amber);color:var(--amber-hot);
+  background:rgba(232,178,92,.08)}
+.drag-ghost{border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.55);
+  border:1px solid var(--amber)!important;background:var(--stage)!important}
+
+/* --- modified transport (fixed bottom) --- */
+.transport{position:fixed;bottom:0;left:0;right:0;z-index:90;
+  background:linear-gradient(0deg,rgba(8,10,18,.98) 60%,transparent);
+  padding:18px clamp(18px,3.4vw,46px) 18px}
+.transport .track{height:40px}
+
+/* --- detail scroll (full scroll-style detail, inside species-strip) --- */
+.detail-scroll{
+  display:block;width:min(1400px,90vw);
+  background:#0c0f18;border:1px solid var(--line-soft);border-radius:8px;
+  transition:opacity .5s ease;
+  opacity:0;pointer-events:none;flex-shrink:0;position:fixed;z-index:50;
+  top:139px;bottom:0;left:50%;transform:translateX(-50%);
+  overflow-y:auto;overflow-x:hidden;
+  box-shadow:0 0 80px rgba(0,0,0,.7),inset 0 0 40px rgba(232,178,92,.015)}
+.detail-scroll.open{opacity:1;pointer-events:auto}
+.detail-scroll{scrollbar-width:thin;scrollbar-color:rgba(232,178,92,.8) rgba(20,26,46,.55)}
+.detail-scroll::-webkit-scrollbar{width:14px}
+.detail-scroll::-webkit-scrollbar-track{background:rgba(20,26,46,.55);border-radius:7px;
+  border:1px solid rgba(35,42,68,.5)}
+.detail-scroll::-webkit-scrollbar-thumb{background:rgba(232,178,92,.8);border-radius:7px;
+  border:2px solid rgba(20,26,46,.35);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+.detail-scroll::-webkit-scrollbar-thumb:hover{background:rgba(232,178,92,.95)}
+.detail-scroll{touch-action:pan-y}
+
+/* close button */
+.ds-close{
+  position:absolute;top:12px;right:16px;width:32px;height:32px;border:none;
+  background:rgba(8,10,18,.75);border:1px solid var(--line);
+  color:var(--ink-dim);font-size:16px;cursor:pointer;
+  border-radius:4px;transition:.2s;z-index:5}
+.ds-close:hover{color:var(--amber);border-color:var(--amber)}
+
+/* hero image */
+.ds-hero{width:100%;height:180px;overflow:hidden;border-radius:8px 8px 0 0;position:relative;
+  background:#080a12;display:flex;align-items:center;justify-content:center}
+.ds-hero img{width:100%;height:100%;object-fit:contain;display:block;filter:saturate(.75) brightness(.7);
+  transition:filter .8s .3s}
+.detail-scroll.open .ds-hero img{filter:saturate(1) brightness(1)}
+.ds-hero::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 50%,rgba(12,15,24,.9) 100%)}
+
+/* inner content */
+.ds-inner{padding:16px 28px 20px;display:flex;flex-direction:column;gap:0}
+
+/* staggered reveal: all content sections start hidden */
+.ds-hero,.ds-names,.ds-spark,.ds-data-grid,.ds-trend-desc,.ds-credits,.ds-solo-row{
+  opacity:0;transform:translateY(12px);
+  transition:opacity .5s ease,transform .5s ease}
+.detail-scroll.open .ds-hero{opacity:1;transform:translateY(0);transition-delay:.1s}
+.detail-scroll.open .ds-names{opacity:1;transform:translateY(0);transition-delay:.2s}
+.detail-scroll.open .ds-spark{opacity:1;transform:translateY(0);transition-delay:.35s}
+.detail-scroll.open .ds-data-grid{opacity:1;transform:translateY(0);transition-delay:.5s}
+.detail-scroll.open .ds-trend-desc{opacity:1;transform:translateY(0);transition-delay:.6s}
+.detail-scroll.open .ds-credits{opacity:1;transform:translateY(0);transition-delay:.7s}
+.detail-scroll.open .ds-solo-row{opacity:1;transform:translateY(0);transition-delay:.8s}
+
+/* names + tags */
+.ds-names{margin-bottom:8px}
+.ds-zh{font-family:var(--serif);font-size:20px;color:var(--ink);line-height:1.3;letter-spacing:.02em}
+.ds-en{font-family:var(--sans);font-size:13px;color:var(--ink-dim);line-height:1.3;margin-top:2px}
+.ds-sci{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--ink-faint);line-height:1.2;margin-top:2px}
+.ds-tag-row{display:flex;gap:7px;margin-top:6px;flex-wrap:wrap}
+.ds-tag{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.09em;
+  padding:2px 7px;border:1px solid currentColor;border-radius:3px}
+
+/* full sparkline */
+.ds-spark{width:100%;height:100px;margin:6px 0 14px;flex:0 0 auto}
+.ds-spark svg{width:100%;height:100%;display:block;border-radius:6px;
+  background:rgba(20,26,46,.35)}
+/* sparkline drawing animation */
+.ds-spark .sp-draw{stroke-dasharray:2000;stroke-dashoffset:2000;
+  transition:stroke-dashoffset 1.6s ease-in-out .4s}
+.detail-scroll.open .ds-spark .sp-draw{stroke-dashoffset:0}
+/* data point circles fade in */
+.ds-spark .sp-point{opacity:0;transition:opacity .3s ease}
+.detail-scroll.open .ds-spark .sp-point{opacity:.9}
+.detail-scroll.open .ds-spark .sp-point:nth-child(1){transition-delay:.6s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(2){transition-delay:.7s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(3){transition-delay:.8s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(4){transition-delay:.9s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(5){transition-delay:1s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(6){transition-delay:1.1s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(7){transition-delay:1.2s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(8){transition-delay:1.3s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(9){transition-delay:1.4s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(10){transition-delay:1.5s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(11){transition-delay:1.6s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(12){transition-delay:1.7s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(13){transition-delay:1.8s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(14){transition-delay:1.9s}
+.detail-scroll.open .ds-spark .sp-point:nth-child(15){transition-delay:2s}
+
+/* data grid */
+.ds-data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px 22px;
+  padding:10px 0;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+.ds-metric{display:flex;flex-direction:column;gap:1px}
+.ds-metric-label{font-family:var(--mono);font-size:9px;letter-spacing:.11em;
+  color:var(--ink-faint);text-transform:uppercase}
+.ds-metric-val{font-family:var(--mono);font-size:13px;color:var(--amber);
+  font-variant-numeric:tabular-nums;line-height:1.25}
+.ds-metric-val.small{font-size:11px;color:var(--ink)}
+.ds-metric-note{font-size:10px;color:var(--ink-faint);line-height:1.35;margin-top:1px}
+
+/* trend description */
+.ds-trend-desc{margin:8px 0;font-family:var(--serif);font-size:13px;line-height:1.75;
+  color:var(--ink-dim);text-wrap:pretty}
+.ds-trend-desc b{color:var(--ink);font-weight:500}
+
+/* credits */
+.ds-credits{display:flex;flex-direction:column;gap:3px;padding-top:10px;
+  border-top:1px solid var(--line-soft)}
+.ds-credit-line{font-size:11px;line-height:1.55;color:var(--ink-faint)}
+.ds-credit-line b{color:var(--ink-dim);font-weight:500}
+.ds-credit-line a{color:var(--ink-dim);border-bottom:1px dotted var(--line);text-decoration:none}
+.ds-credit-line a:hover{color:var(--amber)}
+
+/* solo row */
+.ds-solo-row{display:flex;align-items:center;gap:14px;margin-top:10px}
+.ds-solo{padding:7px 18px;background:rgba(13,17,32,.96);
+  border:1px solid var(--line);color:var(--ink-faint);font:10px var(--mono);letter-spacing:.11em;
+  white-space:nowrap;cursor:pointer;transition:.25s;text-align:center;border-radius:4px}
+.ds-solo:hover,.ds-solo.active{border-color:var(--amber);color:var(--amber-hot);
+  background:rgba(232,178,92,.08)}
+.ds-hint{font-family:var(--mono);font-size:9px;color:var(--ink-faint);opacity:.5;letter-spacing:.05em}
+
+/* scroll hint at bottom of detail panel */
+.ds-scroll-hint{
+  position:sticky;bottom:0;left:0;right:0;
+  text-align:center;padding:14px 0 10px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.15em;
+  color:var(--amber);opacity:.65;
+  background:linear-gradient(180deg,transparent 0%,#0c0f18 40%);
+  pointer-events:none;transition:opacity .4s ease;
+  z-index:2}
+.ds-scroll-hint.hidden{opacity:0}
+.ds-scroll-hint::before{content:"↓ 向下滚动查看完整信息 ↓"}
+
+/* --- scroll progress bar --- */
+.scroll-progress{position:fixed;bottom:138px;left:0;right:0;height:3px;z-index:91;
+  background:rgba(20,26,46,.6);overflow:hidden}
+.scroll-progress-thumb{height:100%;background:linear-gradient(90deg,var(--amber),var(--amber-hot));
+  width:0%;border-radius:0 2px 2px 0;transition:width .08s linear;
+  box-shadow:0 0 6px rgba(232,178,92,.3)}
+
+/* --- scroll hint --- */
+.scroll-hint{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:80;
+  font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.18em;
+  text-transform:uppercase;opacity:.7;transition:opacity .6s;pointer-events:none;
+  animation:hintPulse 2.5s ease-in-out infinite}
+@keyframes hintPulse{0%,100%{opacity:.7}50%{opacity:.3}}
+
+/* --- hide original tracks-wrap, conductor, notes (replaced by scroll layout) --- */
+.tracks-wrap{display:none!important}
+.foot{display:none}
+#drawer{display:none!important}
+
+/* --- notes overlay --- */
+.notes-overlay{position:fixed;inset:0;z-index:200;background:rgba(8,10,18,.94);
+  backdrop-filter:blur(12px);display:none;overflow-y:auto;
+  opacity:0;transition:opacity .4s}
+.notes-overlay.open{display:block;opacity:1}
+.notes-overlay .notes-panel{max-width:860px;margin:60px auto 80px;
+  padding:0 clamp(20px,4vw,60px)}
+.notes-overlay .ns-close{position:fixed;top:20px;right:24px;z-index:210}
+.notes-overlay h2{font-family:var(--serif);font-weight:400;font-size:22px;margin:0 0 6px;
+  letter-spacing:.03em}
+.notes-overlay .sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;
+  color:var(--ink-faint);text-transform:uppercase;margin-bottom:26px}
+.notes-overlay .ncols{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));
+  gap:26px 34px}
+.notes-overlay .ncol h3{font-family:var(--mono);font-size:10px;letter-spacing:.19em;
+  color:var(--amber);text-transform:uppercase;margin:0 0 11px;font-weight:400}
+.notes-overlay .ncol p{font-size:12.8px;line-height:1.87;color:var(--ink-dim);
+  margin:0 0 11px;text-wrap:pretty}
+.notes-overlay .ncol p b{color:var(--ink);font-weight:500}
+.notes-overlay .ncol ul{margin:0;padding-left:15px;font-size:12.3px;line-height:1.8;
+  color:var(--ink-dim)}
+.notes-overlay .ncol li{margin-bottom:7px}
+.notes-overlay .ncol a{color:var(--ink-dim);border-bottom:1px dotted var(--line)}
+.notes-overlay .ncol a:hover{color:var(--amber)}
+
+/* --- conductor (inline in topbar) --- */
+.conductor-inline{display:flex;flex-direction:column;align-items:center;margin-left:auto;
+  padding:0 16px;flex-shrink:0}
+.baton{width:1px;height:24px;background:linear-gradient(180deg,transparent,var(--amber));
+  opacity:.5;transform-origin:bottom center}
+.playing .baton{animation:conduct 2.05s ease-in-out infinite}
+@keyframes conduct{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}}
+.podium-txt{font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:var(--ink-faint);
+  text-transform:uppercase;margin-top:4px}
+
+/* --- responsive --- */
+@media (max-width:900px){
+  .section-title{width:100px;min-width:100px;padding:14px 8px}
+  .section-title .sec-zh{font-size:12px}
+  .section-title .sec-desc{display:none}
+  .species-strip{min-width:800px;gap:12px;padding:10px 14px}
+  .track-row{width:130px;min-width:130px}
+  .tr-port{width:32px;height:32px}
+  .tr-spark{width:100px;height:16px}
+}
+@media (max-width:600px){
+  .section-title{width:70px;min-width:70px;padding:8px 4px}
+  .section-title .sec-zh{font-size:11px}
+  .section-title .sec-desc{display:none}
+  .species-strip{min-width:600px;gap:8px;padding:8px 10px}
+  .track-row{width:110px;min-width:110px;padding:6px 4px 4px;gap:1px}
+  .tr-port{width:28px;height:28px}
+  .tr-spark{width:80px;height:14px}
+  .tr-name{font-size:10.5px}
+  .tr-sci{font-size:7.5px}
+  .tr-metric{font-size:7.5px}
+  .solo-track-btn{font-size:6px;padding:1px 3px}
+  .ds-hero{height:150px}
+  .ds-inner{padding:12px 18px 16px}
+  .ds-zh{font-size:17px}
+  .ds-data-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 18px}
+}
+}
+</style>
+</head>
+<body>
+<div class="hall-bg"></div>
+<div class="vignette"></div>
+
+<div id="curtain">
+  <div class="curtain-left"></div>
+  <div class="curtain-right"></div>
+  <div class="card">
+    <div class="eyebrow">Twenty voices · One held note · 1970 → 2050</div>
+    <h1>寂静的乐团<span class="en">The Silent Orchestra</span></h1>
+    <p class="lede">
+      二十个声部，二十种真实的声音。每一位演奏者都是一个真实的物种，
+      用它<b>自己的录音</b>与<b>自己的样子</b>出场 ——
+      蓝鲸与露脊鲸的低吟、大鸨与孟加拉鸨的求偶低鸣、非洲象的隆鸣、
+      西部大猩猩的胸击、婆罗洲猩猩与黑猩猩的叫声、东方白鹳的喙击、
+      鸮鹦鹉求偶的 booming、中华秋沙鸭的轻柔鸣叫，
+      以及六种鸟鸣与鸟叫。二十个席位，二十段真实的录音。录音无法完全核实之处——近缘物种、或来源仅有版权声明——我们如实标注，不假装完美。
+      音量不是编排出来的，而是由<b>已发表的种群数据</b>驱动。
+    </p>
+    <div class="warn">
+      <b>关于 2050 年：</b>本次检索没有为这二十个物种中的任何一个
+      找到 2040–2050 年的已发表种群预测。所以时间轴走到 2050，
+      但没有任何一条曲线被虚构地延伸下去。
+      当一个声部的数据到期，它会转入<b>「数据止于此」</b>状态 ——
+      乐团变得稀薄，是因为<b>监测停止了</b>，而不是因为我编造了灭绝。
+      1970 年时几乎无人在演奏，也是同一个原因。
+    </div>
+    <button id="begin" type="button">开场 · BEGIN</button>
+    <div class="load-note" id="loadnote">二十段录音将在点击后载入（约 6 MB）</div>
+  </div>
+</div>
+<div id="audhint" role="status">浏览器阻止了自动播放——点击任意位置开启声音</div>
+
+<div class="topbar">
+  <div class="brand">寂静的乐团<span>The Silent Orchestra</span></div>
+  <div class="yearblock">
+    <div class="year" id="yearNum">1970</div>
+    <div class="era" id="eraTxt">序 · 尚无人监测</div>
+  </div>
+  <div class="lpi">
+    <span class="big" id="lpiBig">−73%</span>
+    受监测野生动物种群规模的<b>平均变化率</b>，1970–2020，
+    基于近 35,000 个种群趋势、5,495 个物种。<br>
+    <a href="javascript:void(0)" onclick="openNotesOverlay()">节目单 ↗</a>
+  </div>
+  <div class="conductor-inline">
+    <div class="baton" id="baton"></div>
+    <div class="podium-txt">指挥</div>
+  </div>
+</div>
+
+<div class="timeline-ruler" id="ruler">
+  <div class="ruler-labels" id="rulerLabels"></div>
+  <div class="ruler-cursor" id="rulerCursor"></div>
+</div>
+
+<div class="scroll-wrap" id="scrollWrap">
+  <div class="scroll-inner" id="scrollInner"></div>
+</div>
+<div class="scroll-hint" id="scrollHint">← 横向滚动浏览时间线 →</div>
+<div class="scroll-progress" id="scrollProgress"><div class="scroll-progress-thumb" id="scrollProgressThumb"></div></div>
+
+<div class="notes-overlay" id="notesOverlay">
+  <button class="ns-close" id="notesClose" aria-label="关闭" onclick="closeNotesOverlay()">✕</button>
+  <div class="notes-panel" id="notesPanel"></div>
+</div>
+
+<div class="transport">
+  <div class="track" id="track">
+    <div class="axis"></div>
+    <div class="axis-fill" id="axisFill"></div>
+    <div class="head" id="head"></div>
+    <input type="range" id="scrub" min="1970" max="2050" step="0.25" value="1970" aria-label="年份">
+  </div>
+  <div class="controls">
+    <button class="ctl on" id="playBtn">‖ 暂停</button>
+    <button class="ctl" id="restartBtn">↺ 重新开始</button>
+    <div class="vol">
+      <span>音量</span>
+      <input type="range" class="v" id="vol" min="0" max="100" value="35" aria-label="总音量">
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--alive)"></i>有数据</span>
+      <span><i style="background:var(--unknown);"></i>数据止于此</span>
+      <span><i style="background:rgba(127,216,176,.35)"></i>数据窗口</span>
+    </div>
+  </div>
+</div>
+
+<div class="notes" id="notes">
+  <h2>节目单</h2>
+  <div class="sub">Programme notes · 数据与来源</div>
+  <div class="ncols">
+    <div class="ncol">
+      <h3>这件作品如何发声</h3>
+      <p>每个声部的音量由该物种<b>自己的已发表数据</b>驱动，映射到它自身的历史基线或指数基准，
+        而不是由我按听感编排。</p>
+      <p>在首个数据点之前，席位是<b>暗的</b>：那不是「物种不存在」，而是<b>还没有人在数</b>。
+        乐团随着监测的展开而逐渐成形。</p>
+      <p>在最后一个数据点之后，声部转入<b>虚线状态</b>并降到很低的持续音。
+        这是本作品唯一诚实的处理方式：<b>2040–2050 年的预测，一个都没有找到。</b></p>
+    </div>
+    <div class="ncol">
+      <h3>LPI 到底衡量什么</h3>
+      <p id="lpiWhat"></p>
+      <p id="lpiCaveat" style="color:var(--ink-faint);font-size:12.2px"></p>
+      <div id="lpiBreak"></div>
+    </div>
+    <div class="ncol">
+      <h3>坦白：这份数据的洞</h3>
+      <p>研究过程中反复碰到的限制，一并写在这里，而不是藏起来：</p>
+      <ul>
+        <li>IUCN 红色名录网站与 API 返回 403，<b>官方 population trend 字段未能读取</b>；
+          名录类别改由 GBIF 托管的 IUCN 名录数据集获得。</li>
+<li>二十个物种<b>全部没有</b> 1970 年的点估计。最近的锚点分别是蓝鲸 1981、
+            鸮鹦鹉 2026、黄胸鹀 2013、勺嘴鹬 2024、
+            熊蜂属 2020、北大西洋露脊鲸 2023、小头鼠海豚 1997、大鸨 2010、
+            东方白鹳 2000、中华秋沙鸭 1982、猎隼 1990、绿孔雀 1995、
+            白头硬尾鸭 1900、孟加拉鸨 2006、海南孔雀雉 1990、
+            虎 2022、非洲狮 2023、亚洲象 2018、猎豹 2015。
+            珊瑚礁无时间序列。</li>
+        <li>被移除的物种及其原因记录在 data.js 的 REMOVED 数组中
+           （丹顶鹤、座头鲸、抹香鲸、白腰杓鹬、中华凤头燕鸥、白鹤、朱鹮、大滨鹬、
+            西部大猩猩、婆罗洲猩猩、黑猩猩、非洲草原象）。</li>
+        <li>泛欧农田鸟类指数（PECBMS/Eurostat）页面 404 或由脚本渲染，<b>未能取到数值</b>。</li>
+      </ul>
+    </div>
+    <div class="ncol">
+      <h3>声音与影像的出处</h3>
+      <p>素材来自 Wikimedia Commons、xeno-canto、NOAA Fisheries、iNaturalist、
+        PLoS ONE 与 NOAA SanctSound，下载后以 ffprobe 核对时长与编码。
+        多数为 CC、CC0 或公有领域授权；点击任一席位可看到<b>逐条署名与许可</b>。</p>
+      <p>三处需要额外说明：<b>小头鼠海豚</b>的回声定位咔哒声来自 Sea Shepherd Conservation Society 发布的《The Voice of the Vaquita》（2025），
+        CONANP 科学家在上加利福尼亚湾零容忍区域通过水听器录制，原频率约 139 kHz 已降频以便人耳可闻；
+        来源为 Facebook 视频、无明确许可，此处以署名方式使用；
+        <b>熊蜂属</b>使用的是近缘种 <i>Bombus impatiens</i> 的录音——
+        属内下降最严重的种（<i>B. affinis</i>）没有公开可得的录音，
+        录音代表属的典型声音，但不等同于受威胁种群；
+        <b>珊瑚礁</b>使用 NOAA SanctSound 佛罗里达礁岛群水下声景（公有领域）。</p>
+      <p>所有录音均为原速，未做变调；仅做统一响度处理（loudnorm I=−19 LUFS）
+        与首尾淡入淡出，否则原始素材相差近 <b>47 dB</b>。</p>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  音轨可拖拽排序 · 空格键播放/暂停 · ← → 单年步进<br>
+  数据来源见节目单与各席位详情 · 素材 CC / 公有领域
+</div>
+
+<div id="drawer" role="dialog" aria-label="物种详情" aria-modal="false">
+  <div class="dhead">
+    <button class="dclose" id="dclose" aria-label="关闭">✕</button>
+    <img id="dimg" alt="">
+    <div class="grad"></div>
+    <div class="dtitle"><div class="zh" id="dzh"></div><div class="sci" id="dsci"></div></div>
+  </div>
+  <div class="dbody" id="dbody"></div>
+</div>
+
+<script src="data.js"></script>
+<script>
+/* =========================================================================
+   THE SILENT ORCHESTRA — engine (Track-based layout)
+   ========================================================================= */
+const Y0 = 1970, Y1 = 2050;
+const $ = s => document.querySelector(s);
+
+/* ---------- build per-species presence series from REAL data only ---------- */
+function buildSeries(sp){
+  let pts = [];
+  if (sp.id === "elephant" && sp.longTerm){
+    pts = [ {year:1964, level:1.00, label:"指数 100"},
+            {year:2016, level:0.30, label:"指数 30（样点平均 −70%）"} ];
+    return {pts, first:1964, last:2016, kind:"index"};
+  }
+  if (!sp.points || !sp.points.length) return {pts:[], first:null, last:null, kind:"none"};
+  const isIdx = sp.points[0].type === "index";
+  if (isIdx){
+    pts = sp.points.map(p => ({year:p.year, level:Math.max(0, Math.min(1, p.value/100)), label:"指数 "+p.value}));
+    return {pts, first:pts[0].year, last:pts[pts.length-1].year, kind:"index"};
+  }
+  const vals = sp.points.map(p=>p.value);
+  const ref = (sp.baseline && sp.baseline.high) ? Math.max(sp.baseline.high, ...vals) : Math.max(...vals);
+  pts = sp.points.map(p => ({
+    year:p.year,
+    level: Math.max(0.035, Math.min(1, p.value/ref)),
+    label: p.value.toLocaleString("en-US")
+  }));
+  return {pts, first:pts[0].year, last:pts[pts.length-1].year, kind:"count"};
+}
+
+const VOICES = ORCHESTRA.map(sp => {
+  const s = buildSeries(sp);
+  return {sp, series:s.pts, first:s.first, last:s.last, kind:s.kind,
+          el:null, audio:null, gainNow:0, analyser:null, freq:null};
+});
+
+/* level at a given year: no invention outside the data window */
+function levelAt(v, year){
+  const p = v.series;
+  if (!p.length) return {level:0, state:"none"};
+  if (year < p[0].year) return {level:0, state:"pre"};
+  if (year > p[p.length-1].year) return {level:p[p.length-1].level, state:"post"};
+  for (let i=0;i<p.length-1;i++){
+    if (year >= p[i].year && year <= p[i+1].year){
+      const t = (year - p[i].year) / (p[i+1].year - p[i].year || 1);
+      return {level: p[i].level + t*(p[i+1].level - p[i].level), state:"in"};
+    }
+  }
+  return {level:p[p.length-1].level, state:"in"};
+}
+
+/* ---------- sparkline helpers ---------- */
+const SP_W = 180, SP_H = 32;
+function toSX(y){ return ((y - Y0) / (Y1 - Y0)) * SP_W; }
+function toSY(l){ return SP_H - 2 - l * (SP_H - 4); }
+
+function sparkPoints(v){
+  if (!v.series || !v.series.length) return "";
+  return v.series.map(p => toSX(p.year).toFixed(1)+","+toSY(p.level).toFixed(1)).join(" ");
+}
+
+function sparkAreaPoints(v){
+  if (!v.series || v.series.length < 2) return "";
+  let d = v.series.map(p => toSX(p.year).toFixed(1)+","+toSY(p.level).toFixed(1)).join(" ");
+  d += " " + toSX(v.series[v.series.length-1].year).toFixed(1)+","+SP_H;
+  d += " " + toSX(v.series[0].year).toFixed(1)+","+SP_H;
+  return d;
+}
+
+/* ---------- build ruler ---------- */
+const rulerLabels = $("#rulerLabels");
+const rulerCursor = $("#rulerCursor");
+const SECTION_ORDER = ["contrabass","brass","solo","woodwind","texture"];
+const PX_PER_YEAR = 48;
+const SECTION_WIDTH = (Y1 - Y0) * PX_PER_YEAR;  /* 80 years × 48px = 3840 */
+const RULER_LEFT_PAD = 140;
+const TOTAL_SCROLL = RULER_LEFT_PAD + SECTION_WIDTH;  /* 3980 */
+
+function yearToX(yr){
+  return RULER_LEFT_PAD + ((yr - Y0)/(Y1 - Y0)) * SECTION_WIDTH;
+}
+
+for (let yr=Y0; yr<=Y1; yr+=5){
+  const x = yearToX(yr);
+  const isMajor = yr % 10 === 0;
+  const tick = document.createElement("div");
+  tick.className = "rl-tick" + (isMajor ? " major" : "");
+  tick.style.left = x + "px";
+  rulerLabels.appendChild(tick);
+  if (isMajor){
+    const lbl = document.createElement("div");
+    lbl.className = "rl-lbl major";
+    lbl.style.left = x + "px";
+    lbl.textContent = yr;
+    rulerLabels.appendChild(lbl);
+  } else if (yr % 10 === 5){
+    const lbl = document.createElement("div");
+    lbl.className = "rl-lbl";
+    lbl.style.left = x + "px";
+    lbl.textContent = yr;
+    rulerLabels.appendChild(lbl);
+  }
+}
+rulerLabels.style.width = TOTAL_SCROLL + "px";
+
+/* ---------- build section lanes with track rows ---------- */
+const scrollInner = $("#scrollInner");
+const grouped = {};
+SECTION_ORDER.forEach(s => grouped[s] = []);
+VOICES.forEach(v => {
+  if (grouped[v.sp.section]) grouped[v.sp.section].push(v);
+});
+
+SECTION_ORDER.forEach(secKey => {
+  const sec = SECTIONS[secKey];
+  const voices = grouped[secKey];
+  if (!voices.length) return;
+
+  const lane = document.createElement("div");
+  lane.className = "section-lane";
+  lane.dataset.section = secKey;
+  lane.style.minWidth = (RULER_LEFT_PAD + SECTION_WIDTH) + "px";
+
+  const title = document.createElement("div");
+  title.className = "section-title";
+  title.innerHTML =
+    '<div class="sec-zh">'+sec.zh+'</div>'+
+    '<div class="sec-en">'+sec.en+'</div>'+
+    '<div class="sec-count">'+voices.length+' 种</div>'+
+    '<div class="sec-desc">'+sec.desc+'</div>';
+  lane.appendChild(title);
+
+  const strip = document.createElement("div");
+  strip.className = "species-strip";
+  strip.style.minWidth = SECTION_WIDTH + "px";
+
+  voices.forEach(v => {
+    const sp = v.sp;
+    const d = document.createElement("div");
+    d.className = "track-row silent";
+    d.dataset.id = sp.id;
+    d.draggable = true;
+    d.tabIndex = 0;
+    d.setAttribute("role", "button");
+    d.setAttribute("aria-label", sp.zh + " " + sp.sci);
+
+    const pts = sparkPoints(v);
+    const area = sparkAreaPoints(v);
+    const endX = v.last ? toSX(v.last).toFixed(1) : 0;
+    const dotCx = (v.series.length === 1) ? toSX(v.series[0].year).toFixed(1) : 0;
+    const dotCy = (v.series.length === 1) ? toSY(v.series[0].level).toFixed(1) : 0;
+
+    d.innerHTML =
+      '<div class="tr-handle" title="拖拽排序">⠿</div>' +
+      '<div class="tr-port">' +
+        '<img src="' + (sp.image || 'img/' + sp.id + '.jpg') + '" alt="' + sp.zh + '" loading="lazy" style="object-position:' + sp.focus + '">' +
+        '<div class="tr-halo"></div>' +
+      '</div>' +
+      '<div class="tr-info">' +
+        '<div class="tr-name">' + sp.zh + '</div>' +
+        '<div class="tr-sci">' + sp.sci + '</div>' +
+      '</div>' +
+      '<span class="tag t-' + sp.iucn + '">' + (sp.iucn === "—" ? "属级" : sp.iucn) + '</span>' +
+      '<div class="tr-spark"><svg viewBox="0 0 ' + SP_W + ' ' + SP_H + '" preserveAspectRatio="none">' +
+        '<defs><clipPath id="spc-' + sp.id + '"><rect class="sp-clip" x="0" y="0" width="0" height="' + SP_H + '"/></clipPath></defs>' +
+        (pts ? '<polyline class="sp-bg" points="' + pts + '"/>' : '') +
+        (area ? '<polygon class="sp-area" points="' + area + '" clip-path="url(#spc-' + sp.id + ')"/>' : '') +
+        (pts ? '<polyline class="sp-fg" points="' + pts + '" clip-path="url(#spc-' + sp.id + ')"/>' : '') +
+        (v.series.length === 1 ? '<circle class="sp-dot" cx="' + dotCx + '" cy="' + dotCy + '" r="3" fill="var(--alive)"/>' : '') +
+        (v.last ? '<line x1="' + endX + '" y1="2" x2="' + endX + '" y2="' + SP_H + '" stroke="var(--ink-faint)" stroke-width="0.8" stroke-dasharray="3 2" opacity="0.4"/>' : '') +
+      '</svg></div>' +
+      '<div class="tr-metric"></div>' +
+      '<div class="tr-bars">' + '<i></i>'.repeat(9) + '</div>' +
+      '<button class="solo-track-btn" type="button">▶ 独奏</button>';
+
+    strip.appendChild(d);
+
+    v.el = d;
+    v.spClip = d.querySelector('.sp-clip');
+    v.spFg = d.querySelector('.sp-fg');
+    v.spArea = d.querySelector('.sp-area');
+    v.spDot = d.querySelector('.sp-dot');
+    v.metric = d.querySelector('.tr-metric');
+    v.soloBtn = d.querySelector('.solo-track-btn');
+    v.barEls = [...d.querySelectorAll('.tr-bars i')];
+
+    d.addEventListener("click", ()=>openNoteScroll(sp.id));
+    v.soloBtn.addEventListener("click", e=>{ e.stopPropagation(); startSolo(v, v.soloBtn); });
+    d.addEventListener("keydown", e=>{
+      if(e.key==="Enter"||e.key===" "){e.preventDefault();openNoteScroll(sp.id);}
+    });
+
+    /* HTML5 Drag & Drop */
+    d.addEventListener("dragstart", handleDragStart);
+    d.addEventListener("dragover", handleDragOver);
+    d.addEventListener("dragenter", handleDragEnter);
+    d.addEventListener("dragleave", handleDragLeave);
+    d.addEventListener("drop", handleDrop);
+    d.addEventListener("dragend", handleDragEnd);
+
+    /* Touch drag on handle */
+    const handle = d.querySelector('.tr-handle');
+    handle.addEventListener("touchstart", function(e){ touchDragStart(e, d); }, {passive:false});
+  });
+
+  lane.appendChild(strip);
+  scrollInner.appendChild(lane);
+});
+
+/* ---------- Drag & Drop handlers ---------- */
+let dragSrc = null;
+function handleDragStart(e){
+  dragSrc = this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', this.dataset.id);
+}
+function handleDragOver(e){ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function handleDragEnter(e){ e.preventDefault(); this.classList.add('drag-over'); }
+function handleDragLeave(e){ this.classList.remove('drag-over'); }
+function handleDrop(e){
+  e.preventDefault(); e.stopPropagation();
+  this.classList.remove('drag-over');
+  if (dragSrc && dragSrc !== this && dragSrc.parentElement === this.parentElement){
+    const strip = this.parentElement;
+    const srcIdx = [...strip.children].indexOf(dragSrc);
+    const tgtIdx = [...strip.children].indexOf(this);
+    if (srcIdx < tgtIdx) strip.insertBefore(dragSrc, this.nextSibling);
+    else strip.insertBefore(dragSrc, this);
+    reorderVoices();
+  }
+}
+function handleDragEnd(e){
+  document.querySelectorAll('.track-row').forEach(r=>r.classList.remove('dragging','drag-over'));
+  dragSrc = null;
+}
+
+/* Touch drag */
+let touchDrag = null;
+function touchDragStart(e, row){
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = row.getBoundingClientRect();
+  touchDrag = {
+    src: row, ghost: null,
+    offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top,
+    startX: touch.clientX, startY: touch.clientY, moved: false
+  };
+}
+document.addEventListener('touchmove', function(e){
+  if (!touchDrag) return;
+  const touch = e.touches[0];
+  if (!touchDrag.moved && (Math.abs(touch.clientX - touchDrag.startX) > 5 || Math.abs(touch.clientY - touchDrag.startY) > 5)){
+    touchDrag.moved = true;
+    touchDrag.src.classList.add('dragging');
+    const rect = touchDrag.src.getBoundingClientRect();
+    const ghost = touchDrag.src.cloneNode(true);
+    ghost.classList.add('drag-ghost');
+    ghost.style.cssText = 'position:fixed;width:'+rect.width+'px;z-index:1000;pointer-events:none;opacity:.85';
+    ghost.style.left = (touch.clientX - touchDrag.offsetX) + 'px';
+    ghost.style.top = (touch.clientY - touchDrag.offsetY) + 'px';
+    document.body.appendChild(ghost);
+    touchDrag.ghost = ghost;
+  }
+  if (!touchDrag.moved) return;
+  e.preventDefault();
+  touchDrag.ghost.style.left = (touch.clientX - touchDrag.offsetX) + 'px';
+  touchDrag.ghost.style.top = (touch.clientY - touchDrag.offsetY) + 'px';
+  document.querySelectorAll('.track-row.drag-over').forEach(r=>r.classList.remove('drag-over'));
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const target = el && el.closest('.track-row:not(.dragging)');
+  if (target) target.classList.add('drag-over');
+}, {passive:false});
+
+document.addEventListener('touchend', function(e){
+  if (!touchDrag) return;
+  if (touchDrag.ghost) touchDrag.ghost.remove();
+  document.querySelectorAll('.track-row').forEach(r=>r.classList.remove('dragging','drag-over'));
+  if (touchDrag.moved){
+    const touch = e.changedTouches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = el && el.closest('.track-row:not(.dragging)');
+    if (target && touchDrag.src !== target && touchDrag.src.parentElement === target.parentElement){
+      const strip = target.parentElement;
+      const srcIdx = [...strip.children].indexOf(touchDrag.src);
+      const tgtIdx = [...strip.children].indexOf(target);
+      if (srcIdx < tgtIdx) strip.insertBefore(touchDrag.src, target.nextSibling);
+      else strip.insertBefore(touchDrag.src, target);
+      reorderVoices();
+    }
+  }
+  touchDrag = null;
+});
+
+function reorderVoices(){
+  /* Rebuild VOICES order from DOM order across all strips */
+  const newOrder = [];
+  document.querySelectorAll('.species-strip').forEach(strip=>{
+    strip.querySelectorAll('.track-row').forEach(r=>{
+      const v = VOICES.find(x=>x.sp.id===r.dataset.id);
+      if (v) newOrder.push(v);
+    });
+  });
+  VOICES.length = 0;
+  VOICES.push(...newOrder);
+}
+/* ---------- scroll handling ---------- */
+const scrollWrap = $("#scrollWrap");
+
+/* Wheel → vertical first, horizontal when at vertical boundary */
+scrollWrap.addEventListener("wheel", e=>{
+  /* Don't hijack wheel events inside the detail panel — let it scroll vertically */
+  if (e.target.closest && e.target.closest(".detail-scroll")) return;
+  e.preventDefault();
+  if (e.shiftKey) {
+    /* Shift+wheel → forced horizontal */
+    scrollWrap.scrollLeft += e.deltaY * 2.5;
+    return;
+  }
+  /* Normal wheel: try vertical first */
+  const before = scrollWrap.scrollTop;
+  scrollWrap.scrollTop += e.deltaY;
+  const consumed = scrollWrap.scrollTop - before;
+  const remaining = e.deltaY - consumed;
+  /* If vertical didn't fully consume (hit top/bottom), feed remainder to horizontal */
+  if (Math.abs(remaining) > 0.5) {
+    scrollWrap.scrollLeft += remaining * 2.5;
+  }
+}, {passive:false});
+
+/* Hide scroll hint after first scroll */
+scrollWrap.addEventListener("scroll", ()=>{
+  const hint = $("#scrollHint");
+  if (scrollWrap.scrollLeft > 60 || scrollWrap.scrollTop > 60) hint.style.opacity = "0";
+  else hint.style.opacity = "";
+  /* Sync ruler labels with horizontal scroll */
+  rulerLabels.style.transform = "translateX(" + (-scrollWrap.scrollLeft) + "px)";
+  /* Update scroll progress bar */
+  const maxScroll = scrollWrap.scrollWidth - scrollWrap.clientWidth;
+  const pct = maxScroll > 0 ? (scrollWrap.scrollLeft / maxScroll) * 100 : 0;
+  const thumb = $("#scrollProgressThumb");
+  if (thumb) thumb.style.width = pct + "%";
+}, {passive:true});
+
+/* Drag-to-scroll on the canvas (blank areas only; never interferes with cards/buttons) */
+let dragState=null;
+let dragMoved=false;
+scrollWrap.addEventListener("pointerdown", e=>{
+  if (e.target.closest(".track-row, .detail-scroll, button, input, a, .ds-close, .ds-solo")) return;
+  dragState={ x:e.clientX, y:e.clientY, left:scrollWrap.scrollLeft, top:scrollWrap.scrollTop, moved:false };
+  dragMoved=false;
+});
+scrollWrap.addEventListener("pointermove", e=>{
+  if (!dragState) return;
+  const dx=e.clientX-dragState.x;
+  const dy=e.clientY-dragState.y;
+  if (Math.abs(dx)>5 || Math.abs(dy)>5) dragState.moved=true;
+  if (dragState.moved){ dragMoved=true; scrollWrap.scrollLeft=dragState.left-dx; scrollWrap.scrollTop=dragState.top-dy; }
+});
+scrollWrap.addEventListener("pointerup", ()=>{
+  dragState=null;
+});
+scrollWrap.addEventListener("pointerleave", ()=>{
+  dragState=null;
+});
+/* If a drag ended, swallow the trailing click so card expansion is not triggered */
+scrollWrap.addEventListener("click", e=>{
+  if (dragMoved){ e.stopPropagation(); e.preventDefault(); dragMoved=false; }
+});
+
+/* ---------- ruler cursor sync ---------- */
+function updateRulerCursor(){
+  const x = yearToX(year);
+  rulerCursor.style.left = x + "px";
+}
+
+/* ---------- programme notes from verified LPI object ---------- */
+$("#lpiBig").textContent = "\u2212"+LPI.headline+"%";
+
+/* ---------- audio ---------- */
+let AC=null, master=null, useWebAudio=false, started=false, audioBlocked=false;
+let ensembleFade=null; /* {t0, dur, to} — ensemble fade-in after BEGIN click */
+let soloFadeTimer=null;
+function initAudio(){
+  VOICES.forEach(v=>{
+    if (v.sp.noAudio) { v.audio=null; return; }
+    const a=new Audio("audio/"+v.sp.id+".mp3");
+    a.loop=true; a.preload="auto"; a.volume=Math.max(.01,.20*masterVol);
+    a.muted=false; a.defaultMuted=false; a.playsInline=true;
+    a.addEventListener("error", ()=>{
+      console.warn("音频载入失败:", a.src, a.error);
+      if (v.metric) v.metric.textContent="音频载入失败";
+    });
+    a.addEventListener("canplay", ()=>{ v.audioReady=true; });
+    v.audio=a;
+  });
+  useWebAudio=false;
+}
+function showAudHint(){ const h=$("#audhint"); if(h) h.classList.add("show"); }
+function hideAudHint(){ const h=$("#audhint"); if(h) h.classList.remove("show"); }
+function retryAudio(){
+  if (!started) return;
+  VOICES.forEach(v=>{
+    if (!v.audio || !v.audio.paused) return;
+    if (soloVoice!==null && soloVoice!==v) return;
+    if (!playing && soloVoice!==v) return;
+    v.audio.play().catch(err=>{
+      if (err.name!=="NotAllowedError") console.warn("声部播放失败:", v.sp.id, err.name);
+    });
+  });
+  setTimeout(()=>{
+    if (VOICES.some(v=>v.audio && !v.audio.paused)){ audioBlocked=false; hideAudHint(); }
+  }, 300);
+}
+document.addEventListener("click", ()=>{ if (audioBlocked) retryAudio(); });
+document.addEventListener("keydown", ()=>{ if (audioBlocked) retryAudio(); });
+function setVoiceGain(v, g){
+  v.gainNow = g;
+  const m = masterVol;
+  if (v.audio){
+    /* Solo owns this voice's volume (fade ramps to target); don't let the
+       per-frame ensemble gain clobber it. Ensemble/render() is untouched. */
+    if (!(v===soloVoice && soloVoice!==null)){
+      let fade = 1;
+      if (ensembleFade){
+        const p = (performance.now()-ensembleFade.t0)/ensembleFade.dur;
+        if (p>=1) ensembleFade=null;
+        else fade = Math.max(0, Math.min(1, p));
+      }
+      v.audio.volume = Math.max(0, Math.min(1, g*m*fade));
+    }
+  }
+  if (useWebAudio && v.gnode){
+    v.gnode.gain.setTargetAtTime(1, AC.currentTime, .05);
+  }
+}
+
+/* ---------- clock ---------- */
+let year=Y0, playing=false, masterVol=.35, lastT=0;
+let soloVoice=null;
+const YEARS_PER_SEC = 4.6;
+const scrub = $("#scrub"), axisFill = $("#axisFill"), head = $("#head");
+const pct = y => ((y-Y0)/(Y1-Y0))*100;
+const eraFor = y => {
+  if (y<1981) return "序 · 几乎无人在监测";
+  if (y<1995) return "第一乐章 · 声部陆续入场";
+  if (y<2016) return "第二乐章 · 有增有减";
+  if (y<2026) return "第三乐章 · 数据陆续到期";
+  return "终曲 · 无预测可依";
+};
+
+function frame(t){
+  if (!lastT) lastT=t;
+  const dt=(t-lastT)/1000; lastT=t;
+  if (playing){
+    year += dt*YEARS_PER_SEC;
+    if (year>=Y1){ year=Y1; setPlaying(false); }
+    scrub.value=year;
+  }
+  render();
+  requestAnimationFrame(frame);
+}
+
+function render(){
+  const yInt=Math.floor(year);
+  $("#yearNum").textContent=yInt;
+  $("#eraTxt").textContent=eraFor(year);
+  axisFill.style.width=pct(year)+"%";
+  head.style.left=pct(year)+"%";
+  updateRulerCursor();
+
+  VOICES.forEach(v=>{
+    const {level,state}=levelAt(v,year);
+    let gain=0, lit=false;
+    if (state==="in"){ gain=0.18 + level*0.74; lit=true; }
+    else if (state==="post"){ gain=0.12 + level*0.10; lit=true; }
+    else { gain=0.16; lit=true; }
+
+    if (v.audio){
+      const allowed = soloVoice === null || soloVoice === v;
+      if (!allowed){
+        if (!v.audio.paused) v.audio.pause();
+      } else if (gain>0.004 && v.audio.paused && started && (playing || soloVoice===v)){
+        if (!audioBlocked){
+          v.audio.play().catch(err=>{
+            if (err.name==="NotAllowedError"){ audioBlocked=true; showAudHint(); }
+            else console.warn("声部播放失败:", v.sp.id, err.name);
+          });
+        }
+      } else if (gain<=0.004 && !v.audio.paused){
+        v.audio.pause();
+      }
+    }
+    setVoiceGain(v, gain);
+
+    v.el.classList.toggle("lit", lit && gain>0.02);
+    v.el.classList.toggle("silent", !lit);
+
+    /* sparkline progress */
+    if (v.spClip && v.series.length){
+      let progress = 0;
+      if (state==="in") progress = Math.max(0, Math.min(1, (year - v.first) / (v.last - v.first || 1)));
+      else if (state==="post") progress = 1;
+      v.spClip.setAttribute('width', SP_W * progress);
+    }
+    if (v.spFg){
+      v.spFg.style.stroke = state==="post" ? "var(--unknown)"
+        : (level>=.66?"var(--alive)": level>=.3?"var(--fading)":"var(--gone)");
+    }
+    if (v.spArea){
+      v.spArea.style.fill = state==="post" ? "var(--unknown)"
+        : (level>=.66?"var(--alive)": level>=.3?"var(--fading)":"var(--gone)");
+    }
+    if (v.spDot){
+      v.spDot.style.fill = state==="post" ? "var(--unknown)"
+        : (level>=.66?"var(--alive)": level>=.3?"var(--fading)":"var(--gone)");
+    }
+
+    /* metric text */
+    let m="";
+    if (state==="pre") m="未监测";
+    else if (state==="post") m="数据止于 "+v.last;
+    else if (v.kind==="index") m=Math.round(level*100)+" 指数";
+    else if (v.kind==="count"){
+      const p=v.series, yy=year;
+      let val=null;
+      for(let i=0;i<p.length;i++) if(yy>=p[i].year) val=p[i];
+      m = val? val.label : "";
+    } else if (v.kind==="none") m = v.sp.id==="bumblebee" ? "无时间序列" : "未核实";
+    v.metric.textContent=m;
+
+    /* spectrum bars */
+    if (useWebAudio && v.analyser && gain>0.01){
+      v.analyser.getByteFrequencyData(v.freq);
+      v.barEls.forEach((b,i)=>{
+        const val=v.freq[i*2]||0;
+        b.style.height=Math.max(1,(val/255)*13)+"px";
+        b.style.opacity=.28+ (val/255)*.62;
+      });
+    } else {
+      v.barEls.forEach((b,i)=>{
+        const wob = gain>0.01 ? (Math.sin(year*3.1+i*.9)*.5+.5) : 0;
+        b.style.height=Math.max(1, wob*13*Math.min(1,gain*1.5))+"px";
+        b.style.opacity= gain>0.01 ? .3+wob*.5 : .12;
+      });
+    }
+  });
+}
+
+function setPlaying(p){
+  playing=p;
+  $("#playBtn").textContent = p ? "‖ 暂停" : "▶ 播放";
+  $("#playBtn").classList.toggle("on", p);
+  document.body.classList.toggle("playing", p);
+  if (!p) VOICES.forEach(v=>{ if(v.audio && !v.audio.paused) v.audio.pause(); });
+}
+
+function startSolo(v, button){
+  if (!started){ initAudio(); started=true; }
+  const a=v.audio;
+  if (!a) return;
+  if (soloVoice===v && !a.paused){
+    a.pause(); soloVoice=null; auditionEl=null;
+    if (soloFadeTimer){ clearInterval(soloFadeTimer); soloFadeTimer=null; }
+    VOICES.forEach(o=>{ if(o.audio) o.audio.muted=false; });
+    document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent='\u25b6 独奏'});
+    const nsBtn=$("#nsAudBtn"); if(nsBtn) nsBtn.textContent='\u25b6 独奏';
+    setPlaying(true);
+    return;
+  }
+  soloVoice=v; playing=false;
+  $("#playBtn").textContent="\u25b6 合奏"; $("#playBtn").classList.remove("on");
+  VOICES.forEach(o=>{ if(o!==v && o.audio) { o.audio.pause(); o.audio.muted=true; } });
+  a.muted=false; a.defaultMuted=false; a.currentTime=0;
+  const targetVol = Math.max(.01, .55*masterVol);
+  a.volume = 0;
+  const p=a.play(); auditionEl=a;
+  /* fade in from silence to target volume (ease-in curve) */
+  if (soloFadeTimer){ clearInterval(soloFadeTimer); soloFadeTimer=null; }
+  const fadeStart = performance.now();
+  const fadeDur = 1500;
+  soloFadeTimer = setInterval(()=>{
+    const t = Math.min(1, (performance.now()-fadeStart)/fadeDur);
+    a.volume = targetVol * (t*t);
+    if (t>=1){ clearInterval(soloFadeTimer); soloFadeTimer=null; }
+  }, 40);
+  document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent='\u25b6 独奏'});
+  if(button){button.classList.add('active');button.textContent='\u23f8 停止独奏';}
+  const nsBtn=$("#nsAudBtn"); if(nsBtn) nsBtn.textContent='\u23f8 停止独奏';
+  if(p) p.catch(err=>{ console.warn('独奏播放失败:',err); if(button) button.textContent='\u25b6 重试独奏'; if(err.name==="NotAllowedError"){ audioBlocked=true; showAudHint(); } });
+}
+/* ---------- controls ---------- */
+$("#begin").addEventListener("click", async ()=>{
+  const btn = $("#begin");
+  btn.classList.add("fading");
+  await new Promise(r => setTimeout(r, 500));
+  /* Fade card text and open curtain simultaneously */
+  const card = btn.closest(".card");
+  if (card) card.classList.add("fading");
+  $("#curtain").classList.add("curtain-opening");
+  $("#loadnote").textContent="正在载入录音…";
+  try { initAudio(); started=true; }
+  catch(err){
+    console.warn("音频初始化失败，继续进入无声舞台:", err);
+    started=true;
+  }
+  VOICES.forEach(v=>{
+    if (v.audio){
+      v.audio.volume=0;
+      v.audio.muted=false;
+      v.audio.play().catch(err=>{
+        console.warn("播放被浏览器阻止:", v.sp.id, err.name);
+        if (err.name==="NotAllowedError"){ audioBlocked=true; showAudHint(); }
+      });
+    }
+  });
+  ensembleFade={t0:performance.now(),dur:2500,to:0.20};
+  if (AC && AC.state==="suspended"){ try{ await AC.resume(); }catch(e){} }
+  setPlaying(true);
+  requestAnimationFrame(frame);
+  /* Mark curtain fully up after animation completes */
+  await new Promise(r => setTimeout(r, 2800));
+  $("#curtain").classList.add("up");
+});
+$("#playBtn").addEventListener("click", async ()=>{
+  if (AC && AC.state==="suspended"){ try{ await AC.resume(); }catch(e){} }
+  if (soloVoice!==null) return;
+  setPlaying(!playing);
+});
+$("#restartBtn").addEventListener("click", ()=>{
+  soloVoice=null;
+  VOICES.forEach(v=>{ if(v.audio) v.audio.muted=false; });
+  year=Y0; scrub.value=Y0; setPlaying(true);
+});
+scrub.addEventListener("input", ()=>{ year=parseFloat(scrub.value); });
+scrub.addEventListener("pointerdown", ()=> setPlaying(false));
+$("#vol").addEventListener("input", e=>{
+  masterVol=e.target.value/100;
+  VOICES.forEach(v=> setVoiceGain(v, v.gainNow));
+});
+document.addEventListener("keydown", e=>{
+  if (e.target.tagName==="INPUT") return;
+  if (e.key===" "){ e.preventDefault(); setPlaying(!playing); }
+  if (e.key==="ArrowRight"){ setPlaying(false); year=Math.min(Y1,year+1); scrub.value=year; }
+  if (e.key==="ArrowLeft"){ setPlaying(false); year=Math.max(Y0,year-1); scrub.value=year; }
+  if (e.key==="Escape"){
+    const inlineDetail = document.getElementById("detailInline");
+    if (inlineDetail && inlineDetail.classList.contains("open")) closeDetailScroll();
+    else if ($("#notesOverlay").classList.contains("open")) closeNotesOverlay();
+  }
+});
+
+/* ---------- note scroll overlay ---------- */
+let auditionEl=null;
+function fmtNum(n){ return typeof n==="number" ? n.toLocaleString("en-US") : n; }
+
+function openNoteScroll(id){
+  /* Close any existing detail scroll first */
+  closeDetailScroll();
+
+  const sp=ORCHESTRA.find(s=>s.id===id);
+  const v=VOICES.find(x=>x.sp.id===id);
+  const ca=CREDITS.audio[id], ci=CREDITS.images[id];
+  const iucnColor = sp.iucn==="CR"?"var(--cr)":sp.iucn==="EN"?"var(--en)":sp.iucn==="VU"?"var(--vu)":"var(--ink-faint)";
+
+  /* === Build full-width scroll detail === */
+  let h='<button class="ds-close" aria-label="关闭">✕</button>';
+
+  /* Hero image */
+  h+='<div class="ds-hero">';
+  h+='<img src="'+(sp.image||"img/"+id+".jpg")+'" alt="'+sp.zh+'" style="object-position:'+(sp.focus||'center')+'">';
+  h+='</div>';
+
+  /* Inner content */
+  h+='<div class="ds-inner">';
+
+  /* Names + tags */
+  h+='<div class="ds-names">';
+  h+='<div class="ds-zh">'+sp.zh+'</div>';
+  h+='<div class="ds-en">'+sp.en+'</div>';
+  h+='<div class="ds-sci">'+sp.sci+'</div>';
+  h+='<div class="ds-tag-row">';
+  h+='<span class="ds-tag" style="color:'+iucnColor+';border-color:'+iucnColor+'">'+sp.iucnZh+(sp.iucn!=="—"?" ("+sp.iucn+")":"")+'</span>';
+  h+='<span class="ds-tag" style="color:var(--ink-faint);border-color:var(--line)">'+SECTIONS[sp.section].zh+' · '+sp.voice+'</span>';
+  h+='</div></div>';
+
+  /* Full sparkline (700×110) */
+  h+='<div class="ds-spark">';
+  const sparkW = 700, sparkH = 110, sparkPad = 12;
+  if (v && v.series && v.series.length){
+    const s = v.series;
+    const minX=s[0].year, maxX=s[s.length-1].year;
+    const vals=s.map(p=>p.level);
+    const minL=Math.min(...vals), maxL=Math.max(...vals);
+    const sx=yr=>sparkPad+((yr-minX)/(maxX-minX||1))*(sparkW-sparkPad*2);
+    const sy=l=>sparkH-sparkPad-((l-minL)/(maxL-minL||1))*(sparkH-sparkPad*2);
+    const linePts=s.map(p=>sx(p.year).toFixed(1)+","+sy(p.level).toFixed(1)).join(" ");
+    const areaPts=sx(s[0].year).toFixed(1)+","+sparkH+" "+linePts+" "+sx(s[s.length-1].year).toFixed(1)+","+sparkH;
+    const yearLineX = (year>=minX && year<=maxX) ? sx(year) : (year<minX?sx(minX):sx(maxX));
+    const dots = s.map(p=>'<circle class="sp-point" cx="'+sx(p.year).toFixed(1)+'" cy="'+sy(p.level).toFixed(1)+'" r="4.5" fill="'+iucnColor+'" fill-opacity=".85"/>').join("");
+
+    h+='<svg viewBox="0 0 '+sparkW+' '+sparkH+'" preserveAspectRatio="xMidYMid meet">';
+    h+='<defs><linearGradient id="dssg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+iucnColor+'" stop-opacity=".22"/><stop offset="100%" stop-color="'+iucnColor+'" stop-opacity=".02"/></linearGradient></defs>';
+    h+='<polygon points="'+areaPts+'" fill="url(#dssg)"/>';
+    h+='<polyline class="sp-draw" points="'+linePts+'" fill="none" stroke="'+iucnColor+'" stroke-width="2.5" stroke-linejoin="round"/>';
+    h+=dots;
+    /* year labels at data points */
+    s.forEach(p=>{
+      h+='<text x="'+sx(p.year).toFixed(1)+'" y="'+(sparkH-sparkPad+14)+'" text-anchor="middle" fill="var(--ink-faint)" font-size="9" font-family="var(--mono)">'+p.year+'</text>';
+    });
+    /* year cursor */
+    if (year>=minX&&year<=maxX) h+='<line x1="'+yearLineX.toFixed(1)+'" y1="'+sparkPad+'" x2="'+yearLineX.toFixed(1)+'" y2="'+(sparkH-sparkPad)+'" stroke="var(--amber-hot)" stroke-width="1.5" stroke-dasharray="4 3" opacity=".6"/>';
+    h+='<text x="'+sparkPad+'" y="'+(sparkPad+10)+'" fill="var(--ink-faint)" font-size="10" font-family="var(--mono)">'+minX+'</text>';
+    h+='<text x="'+(sparkW-sparkPad)+'" y="'+(sparkPad+10)+'" text-anchor="end" fill="var(--ink-faint)" font-size="10" font-family="var(--mono)">'+maxX+'</text>';
+    h+='</svg>';
+  } else {
+    h+='<svg viewBox="0 0 '+sparkW+' '+sparkH+'" preserveAspectRatio="xMidYMid meet">';
+    h+='<line x1="'+sparkPad+'" y1="'+sparkH/2+'" x2="'+(sparkW-sparkPad)+'" y2="'+sparkH/2+'" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="4 3" opacity=".3"/>';
+    h+='<text x="'+sparkW/2+'" y="'+(sparkH/2+4)+'" text-anchor="middle" fill="var(--ink-faint)" font-size="12" font-family="var(--mono)">无时间序列数据</text>';
+    h+='</svg>';
+  }
+  h+='</div>';
+
+  /* Data grid (all fields) */
+  h+='<div class="ds-data-grid">';
+  /* Current value */
+  let metricVal="未监测", metricLabel="当前状态";
+  if (v){
+    const {level,state}=levelAt(v,year);
+    if (state==="pre"){ metricVal="未监测"; metricLabel="当前状态"; }
+    else if (state==="post"){ metricVal="数据止于 "+v.last; metricLabel="数据窗口"; }
+    else if (v.kind==="index"){ metricVal=Math.round(level*100)+" 指数"; metricLabel="种群指数（基线=100）"; }
+    else if (v.kind==="count"){
+      const p=v.series; let val=null;
+      for(let i=0;i<p.length;i++) if(year>=p[i].year) val=p[i];
+      metricVal = val? val.label : "";
+      metricLabel = "种群数量估计";
+    } else if (v.kind==="none") { metricVal = v.sp.id==="bumblebee"?"无时间序列":"未核实"; metricLabel="数据状态"; }
+  }
+  h+='<div class="ds-metric"><span class="ds-metric-label">'+metricLabel+'</span><span class="ds-metric-val">'+metricVal+'</span></div>';
+
+  /* Scope */
+  if (sp.scope) h+='<div class="ds-metric"><span class="ds-metric-label">统计范围</span><span class="ds-metric-val small">'+sp.scope+'</span></div>';
+
+  /* Baseline */
+  if (sp.baseline) h+='<div class="ds-metric"><span class="ds-metric-label">历史基线</span><span class="ds-metric-val small">'+(sp.baseline.low===sp.baseline.high?fmtNum(sp.baseline.low):fmtNum(sp.baseline.low)+"–"+fmtNum(sp.baseline.high))+'</span></div>';
+
+  /* Pct of baseline */
+  if (sp.pctOfBaseline) h+='<div class="ds-metric"><span class="ds-metric-label">占基线</span><span class="ds-metric-val small">'+sp.pctOfBaseline+'</span></div>';
+
+  /* Rate */
+  if (sp.rate) h+='<div class="ds-metric"><span class="ds-metric-label">变化率</span><span class="ds-metric-val small">'+(sp.rate.pct>0?"+":"")+sp.rate.pct+'%/年</span>'+(sp.rate.ci?'<span class="ds-metric-note">CI ['+sp.rate.ci[0]+', '+sp.rate.ci[1]+']</span>':'')+'</div>';
+
+  /* Long-term */
+  if (sp.longTerm) h+='<div class="ds-metric"><span class="ds-metric-label">长期趋势</span><span class="ds-metric-val small" style="color:var(--fading)">'+sp.longTerm.period+' · −'+sp.longTerm.pct+'%</span>'+(sp.longTerm.basis?'<span class="ds-metric-note">'+sp.longTerm.basis+'</span>':'')+'</div>';
+
+  /* Current value */
+  if (sp.current) h+='<div class="ds-metric"><span class="ds-metric-label">当前规模</span><span class="ds-metric-val small">'+sp.current.value+'</span></div>';
+
+  /* Data ends */
+  if (sp.dataEnds) h+='<div class="ds-metric"><span class="ds-metric-label">数据截止</span><span class="ds-metric-val small">'+sp.dataEnds+'</span></div>';
+
+  /* Trend */
+  h+='<div class="ds-metric"><span class="ds-metric-label">趋势判断</span><span class="ds-metric-val small">'+sp.trend+'</span></div>';
+
+  h+='</div>'; /* end data grid */
+
+  /* Tipping (if present) */
+  if (sp.tipping){
+    h+='<div class="ds-metric" style="grid-column:1/-1;padding-top:8px;border-top:1px solid var(--line-soft)">';
+    h+='<span class="ds-metric-label">临界点风险</span>';
+    h+='<span class="ds-metric-val small" style="color:var(--cr)">'+sp.tipping.report+' · '+sp.tipping.threshold+'</span>';
+    h+='<span class="ds-metric-note" style="font-size:11px;line-height:1.6;color:var(--ink-dim);margin-top:4px">'+sp.tipping.text+'</span>';
+    if (sp.tipping.nuance) h+='<span class="ds-metric-note" style="font-size:10px;line-height:1.5;color:var(--ink-faint);margin-top:4px">'+sp.tipping.nuance+'</span>';
+    h+='</div>';
+  }
+
+  /* Extra (if present) */
+  if (sp.extra){
+    h+='<div class="ds-metric" style="grid-column:1/-1;padding-top:8px;border-top:1px solid var(--line-soft)">';
+    h+='<span class="ds-metric-label">补充说明</span>';
+    h+='<span class="ds-metric-note" style="font-size:11px;line-height:1.6;color:var(--ink-dim)">'+sp.extra+'</span>';
+    h+='</div>';
+  }
+
+  /* Trend description */
+  h+='<div class="ds-trend-desc">';
+  if (sp.trend==="recovering") h+='<b>种群正在恢复。</b>';
+  else if (sp.trend==="recovering-critical") h+='<b>极度濒危中的恢复尝试。</b>';
+  else if (sp.trend==="declining") h+='<b>种群仍在下降。</b>';
+  else if (sp.trend==="tipping-risk") h+='<b>面临生态系统临界点风险。</b>';
+  else h+='<b>状态待定。</b>';
+  h+='</div>';
+
+  /* Credits section */
+  h+='<div class="ds-credits">';
+  if(ca){
+    h+='<div class="ds-credit-line"><b>录音</b> '+ca.file+' · '+ca.by+' · '+ca.lic;
+    if (ca.src) h+=' · <a href="'+ca.src+'" target="_blank" rel="noopener">来源 ↗</a>';
+    h+='</div>';
+    if (ca.warn) h+='<div class="ds-credit-line" style="color:var(--fading)">⚠ 已改动：'+ca.warn+'</div>';
+  } else {
+    h+='<div class="ds-credit-line"><b>录音</b> 当前没有经过核实的真实录音</div>';
+  }
+  if(ci){
+    h+='<div class="ds-credit-line"><b>照片</b> '+ci.by+' · '+ci.lic;
+    if (ci.src) h+=' · <a href="'+ci.src+'" target="_blank" rel="noopener">来源 ↗</a>';
+    h+='</div>';
+  }
+  if (sp.audioNote) h+='<div class="ds-credit-line" style="opacity:.7">'+sp.audioNote+'</div>';
+  /* Research sources */
+  if (sp.sources && sp.sources.length){
+    h+='<div class="ds-credit-line"><b>研究来源</b> ';
+    h+=sp.sources.map(src=>{
+      let link='';
+      if (src.url) link='<a href="'+src.url+'" target="_blank" rel="noopener">'+src.t+' ↗</a>';
+      else if (src.doi) link='<a href="https://doi.org/'+src.doi+'" target="_blank" rel="noopener">'+src.t+' ↗</a>';
+      else link=src.t;
+      if (src.doi && src.url) link+=' (doi: '+src.doi+')';
+      return link;
+    }).join(' · ');
+    h+='</div>';
+  }
+  h+='</div>'; /* end credits */
+
+  /* Solo row */
+  h+='<div class="ds-solo-row">';
+  h+='<button class="ds-solo" type="button">▶ 独奏</button>';
+  h+='<span class="ds-hint">点击聆听此声部</span>';
+  h+='</div>';
+
+  h+='</div>'; /* end ds-inner */
+
+  /* Scroll hint (visible when content overflows, hidden when scrolled to bottom) */
+  h+='<div class="ds-scroll-hint" id="dsScrollHint"></div>';
+
+  /* Create the detail element */
+  const el = document.createElement("div");
+  el.className = "detail-scroll";
+  el.id = "detailInline";
+  el.innerHTML = h;
+  el.dataset.speciesId = id;
+
+  /* Find the clicked track-row and insert detail scroll AFTER it */
+  const clickedCard = document.querySelector('.track-row[data-id="'+id+'"]');
+  if (clickedCard) {
+    if (clickedCard.nextSibling) {
+      clickedCard.parentNode.insertBefore(el, clickedCard.nextSibling);
+    } else {
+      clickedCard.parentNode.appendChild(el);
+    }
+  } else {
+    /* Fallback: find by section */
+    const targetLane = document.querySelector('.section-lane[data-section="'+sp.section+'"]');
+    if (targetLane) {
+      const strip = targetLane.querySelector('.species-strip');
+      if (strip) strip.appendChild(el);
+    }
+  }
+
+  /* Trigger animation on next frame */
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      el.classList.add("open");
+    });
+  });
+
+  /* Wire up close button */
+  el.querySelector(".ds-close").addEventListener("click", closeDetailScroll);
+
+  /* Wire up solo button */
+  const soloBtn = el.querySelector(".ds-solo");
+  if (soloBtn) soloBtn.addEventListener("click", ()=>{
+    startSolo(v, soloBtn);
+  });
+
+  /* Wire up scroll hint: hide when scrolled near bottom */
+  const scrollHint = el.querySelector(".ds-scroll-hint");
+  if (scrollHint) {
+    const checkScroll = ()=>{
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+      scrollHint.classList.toggle("hidden", atBottom);
+    };
+    el.addEventListener("scroll", checkScroll);
+    /* Initial check after content renders */
+    requestAnimationFrame(()=>requestAnimationFrame(checkScroll));
+  }
+
+  /* Pointer drag scrolling for detail panel */
+  {
+    let dragStartY = 0, dragStartScroll = 0, isDragging = false, didDrag = false;
+    const DRAG_THRESHOLD = 5;
+
+    el.addEventListener("pointerdown", (e) => {
+      /* Don't drag on interactive elements */
+      const tag = e.target.tagName;
+      if (tag === "BUTTON" || tag === "A" || tag === "INPUT" || tag === "SELECT") return;
+      if (e.target.closest(".ds-close") || e.target.closest(".ds-solo") || e.target.closest("a")) return;
+      /* Only left mouse button or touch */
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+
+      dragStartY = e.clientY;
+      dragStartScroll = el.scrollTop;
+      isDragging = true;
+      didDrag = false;
+      el.setPointerCapture(e.pointerId);
+    });
+
+    el.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      const dy = e.clientY - dragStartY;
+      if (Math.abs(dy) > DRAG_THRESHOLD) didDrag = true;
+      if (didDrag) {
+        el.scrollTop = dragStartScroll - dy;
+        e.preventDefault();
+      }
+    });
+
+    const endDrag = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      /* Swallow the trailing click after a drag to prevent accidental solo trigger */
+      if (didDrag) {
+        const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); document.removeEventListener("click", swallow, true); };
+        document.addEventListener("click", swallow, true);
+        setTimeout(() => document.removeEventListener("click", swallow, true), 400);
+      }
+    };
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+  }
+
+  /* Detail is fixed-positioned and centered; no scroll adjustment needed */
+}
+
+function closeDetailScroll(){
+  const el = document.getElementById("detailInline");
+  if (!el) return;
+  el.classList.remove("open");
+  /* Remove after fade-out completes */
+  setTimeout(()=>{ if (el.parentNode) el.remove(); }, 600);
+  if (auditionEl){ auditionEl.pause(); auditionEl=null; }
+  if (soloFadeTimer){ clearInterval(soloFadeTimer); soloFadeTimer=null; }
+  soloVoice=null;
+  VOICES.forEach(v=>{ if(v.audio){ v.audio.pause(); v.audio.muted=false; } });
+  document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent='\u25b6 独奏'});
+}
+
+/* Alias for backward compatibility */
+function openDrawer(id){ openNoteScroll(id); }
+function closeDrawer(){ closeDetailScroll(); }
+
+/* ---------- notes overlay ---------- */
+function openNotesOverlay(){
+  /* Copy programme notes content from hidden section */
+  const notesSection = document.querySelector('.notes');
+  const panel = $("#notesPanel");
+  if (notesSection && !panel.innerHTML.trim()){
+    panel.innerHTML = notesSection.innerHTML;
+    /* Also populate LPI content */
+    if (!panel.querySelector('#lpiWhat')){
+      /* LPI content already populated by existing code, just copy it */
+    }
+  }
+  $("#notesOverlay").classList.add("open");
+}
+function closeNotesOverlay(){
+  $("#notesOverlay").classList.remove("open");
+}
+$("#notesClose").addEventListener("click", closeNotesOverlay);
+$("#notesOverlay").addEventListener("click", e=>{ if(e.target===$("#notesOverlay")) closeNotesOverlay(); });
+
+/* ---------- programme notes from verified LPI object ---------- */
+$("#lpiBig").textContent = "\u2212"+LPI.headline+"%";
+$("#lpiWhat").innerHTML = LPI.whatItIs.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+$("#lpiCaveat").textContent = LPI.caveat;
+{
+  let h='<p style="font-size:12.3px;color:var(--ink-dim);margin-top:4px">'+
+    '<b>按生境</b>（'+LPI.period+'，'+LPI.edition+'）</p><ul style="font-size:12.2px">';
+  LPI.realms.forEach(r=>h+='<li>'+r.k+' <b style="color:var(--fading);font-family:var(--mono)">−'+r.v+'%</b></li>');
+  h+='</ul><p style="font-size:12.3px;color:var(--ink-dim);margin-top:10px"><b>按区域</b></p><ul style="font-size:12.2px">';
+  LPI.regions.forEach(r=>h+='<li>'+r.k+' <b style="color:var(--fading);font-family:var(--mono)">−'+r.v+'%</b></li>');
+  h+='</ul>';
+  $("#lpiBreak").innerHTML=h;
+}
+
+render();
+</script>
+</body>
+</html>

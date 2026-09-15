@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>概念 A · 横向画卷 — The Silent Orchestra</title>
+<style>
+:root{
+  --hall:#080a12; --hall2:#0d1120; --stage:#141a2e;
+  --ink:#f2ece0; --ink-dim:#9aa0b4; --ink-faint:#5d6478;
+  --amber:#e8b25c; --amber-hot:#ffd08a;
+  --line:#232a44; --line-soft:#1a2038;
+  --alive:#7fd8b0; --fading:#e89a5c; --gone:#8a5c72; --unknown:#4a5270;
+  --cr:#f0837f; --en:#e8a25c; --vu:#e0c86a;
+  --serif: "Songti SC","Source Han Serif SC","Noto Serif CJK SC",Georgia,serif;
+  --sans: "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono: ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--hall);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;overflow:hidden;height:100vh}
+
+/* === HEADER === */
+.hero-header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:flex-end;gap:32px;
+  padding:20px 40px 14px;
+  background:linear-gradient(180deg,rgba(8,10,18,.98) 0%,rgba(8,10,18,.92) 70%,transparent);
+}
+.hero-header h1{
+  font-family:var(--serif);font-weight:400;font-size:20px;letter-spacing:.03em;white-space:nowrap;
+}
+.hero-header h1 .concept{
+  display:block;font-family:var(--mono);font-size:9px;letter-spacing:.28em;color:var(--amber);
+  text-transform:uppercase;margin-bottom:4px;
+}
+.hero-header .subtitle{
+  font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.12em;
+  white-space:nowrap;
+}
+
+/* === TIMELINE RULER (fixed top) === */
+.timeline-ruler{
+  position:fixed;top:72px;left:0;right:0;z-index:99;height:48px;
+  background:rgba(8,10,18,.94);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:center;
+  overflow:hidden;
+}
+.ruler-inner{
+  display:flex;align-items:center;height:100%;position:relative;
+  min-width:100%;
+}
+.ruler-tick{
+  position:absolute;bottom:0;height:8px;width:1px;background:var(--line);
+}
+.ruler-tick.major{height:14px;background:var(--ink-faint)}
+.ruler-label{
+  position:absolute;bottom:18px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.08em;
+  white-space:nowrap;
+}
+.ruler-maj-label{
+  position:absolute;bottom:16px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:13px;color:var(--ink-dim);letter-spacing:.06em;
+  white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+
+/* === SCROLL CONTAINER === */
+.scroll-wrap{
+  position:fixed;top:120px;left:0;right:0;bottom:0;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-behavior:smooth;
+  cursor:grab;
+}
+.scroll-wrap:active{cursor:grabbing}
+.scroll-inner{
+  display:flex;height:100%;
+  min-width:max-content;
+}
+
+/* === SECTION LANES === */
+.section-lane{
+  display:flex;flex-direction:column;
+  border-right:1px solid var(--line-soft);
+  position:relative;
+}
+.section-lane:last-child{border-right:none}
+.section-title{
+  position:sticky;left:0;top:0;z-index:10;
+  width:160px;min-width:160px;height:100%;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:linear-gradient(135deg,rgba(20,26,46,.95),rgba(13,17,32,.98));
+  border-right:1px solid var(--line);padding:20px;
+  text-align:center;
+}
+.section-title .zh{
+  font-family:var(--serif);font-size:22px;writing-mode:vertical-rl;
+  letter-spacing:.12em;color:var(--ink);margin-bottom:12px;
+}
+.section-title .en{
+  font-family:var(--mono);font-size:9px;letter-spacing:.22em;color:var(--amber);
+  text-transform:uppercase;writing-mode:vertical-rl;
+}
+.section-title .count{
+  font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:10px;
+  writing-mode:vertical-rl;
+}
+
+/* === SPECIES ROWS === */
+.species-strip{
+  display:flex;flex-direction:column;justify-content:center;
+  gap:2px;padding:16px 24px;min-width:600px;
+}
+.species-row{
+  display:flex;align-items:center;gap:16px;
+  padding:6px 12px;border-radius:3px;
+  transition:background .3s;
+}
+.species-row:hover{background:rgba(232,178,92,.06)}
+
+.sp-info{
+  width:160px;min-width:160px;flex-shrink:0;
+}
+.sp-name{
+  font-family:var(--serif);font-size:13px;color:var(--ink-dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sp-name .sci{
+  display:block;font-size:10px;font-style:italic;color:var(--ink-faint);margin-top:1px;
+}
+.sp-badge{
+  display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:.12em;
+  padding:1px 5px;border:1px solid;border-radius:2px;margin-left:6px;
+  vertical-align:middle;
+}
+.sp-badge.CR{color:var(--cr);border-color:var(--cr)}
+.sp-badge.EN{color:var(--en);border-color:var(--en)}
+.sp-badge.VU{color:var(--vu);border-color:var(--vu)}
+
+.sp-spark{
+  flex:1;height:36px;min-width:300px;
+}
+.sp-spark svg{width:100%;height:100%;display:block}
+
+.sp-value{
+  font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+  min-width:60px;text-align:right;white-space:nowrap;
+}
+
+/* === TOOLTIP === */
+.tooltip{
+  position:fixed;z-index:200;padding:10px 14px;
+  background:rgba(14,19,34,.96);border:1px solid var(--line);
+  border-radius:4px;pointer-events:none;opacity:0;transition:opacity .2s;
+  backdrop-filter:blur(12px);max-width:220px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.tooltip.show{opacity:1}
+.tooltip .tzh{font-family:var(--serif);font-size:14px;color:var(--ink)}
+.tooltip .ten{font-size:10px;color:var(--ink-dim);margin-top:2px}
+.tooltip .tyr{font-family:var(--mono);font-size:9px;color:var(--amber);margin-top:6px;letter-spacing:.1em}
+.tooltip .tval{font-family:var(--mono);font-size:12px;color:var(--ink);margin-top:2px}
+
+/* === 2050 WARNING OVERLAY === */
+.warning-overlay{
+  position:fixed;top:120px;right:0;bottom:0;width:320px;z-index:50;
+  background:linear-gradient(90deg,transparent,rgba(138,92,114,.12) 40%,rgba(138,92,114,.25));
+  pointer-events:none;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .8s;
+}
+.warning-overlay.show{opacity:1}
+.warning-overlay .wtext{
+  text-align:center;padding:20px;
+}
+.warning-overlay .wnum{
+  font-family:var(--mono);font-size:60px;font-weight:200;color:var(--gone);
+  letter-spacing:-.02em;opacity:.8;
+}
+.warning-overlay .wlabel{
+  font-family:var(--serif);font-size:14px;color:var(--ink-dim);margin-top:8px;
+  letter-spacing:.1em;
+}
+.warning-overlay .wsub{
+  font-family:var(--mono);font-size:9px;color:var(--ink-faint);margin-top:6px;
+  letter-spacing:.14em;text-transform:uppercase;
+}
+
+/* === SCROLL HINT === */
+.scroll-hint{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;
+  font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.18em;
+  text-transform:uppercase;opacity:.7;
+  animation:hintPulse 2.5s ease-in-out infinite;
+}
+@keyframes hintPulse{0%,100%{opacity:.7}50%{opacity:.3}}
+
+/* === LEGEND === */
+.legend-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:90;
+  display:flex;align-items:center;justify-content:center;gap:24px;
+  padding:10px 40px;
+  background:linear-gradient(0deg,rgba(8,10,18,.96),transparent);
+  font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.1em;
+}
+.legend-bar .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+/* === BACKGROUND GRAIN === */
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  opacity:.35;mix-blend-mode:overlay;
+  background-image:radial-gradient(rgba(255,255,255,.05) .5px, transparent .5px);
+  background-size:3px 3px;
+}
+</style>
+</head>
+<body>
+
+<div class="hero-header">
+  <h1>
+    <span class="concept">Concept A · Prototype</span>
+    横向画卷 · 濒危物种时间线
+  </h1>
+  <div class="subtitle">Horizontal Scroll — 1970 → 2050</div>
+</div>
+
+<div class="timeline-ruler" id="ruler"></div>
+
+<div class="scroll-wrap" id="scrollWrap">
+  <div class="scroll-inner" id="scrollInner"></div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tzh"></div>
+  <div class="ten"></div>
+  <div class="tyr"></div>
+  <div class="tval"></div>
+</div>
+
+<div class="warning-overlay" id="warningOverlay">
+  <div class="wtext">
+    <div class="wnum">2050</div>
+    <div class="wlabel">警示时刻</div>
+    <div class="wsub">若趋势不改</div>
+  </div>
+</div>
+
+<div class="scroll-hint" id="scrollHint">← 横向滚动浏览 →</div>
+
+<div class="legend-bar">
+  <span><span class="dot" style="background:var(--cr)"></span>CR 极危</span>
+  <span><span class="dot" style="background:var(--en)"></span>EN 濒危</span>
+  <span><span class="dot" style="background:var(--vu)"></span>VU 易危</span>
+  <span style="margin-left:20px;color:var(--ink-dim)">滚轮驱动横向滚动</span>
+</div>
+
+<script>
+const ORCHESTRA = [
+  {id:"bluewhale",section:"contrabass",zh:"蓝鲸",en:"Blue whale",sci:"Balaenoptera musculus",iucn:"EN",trend:"recovering",
+   points:[{year:1981,value:453},{year:1988,value:559},{year:1998,value:2280}]},
+  {id:"rightwhale",section:"contrabass",zh:"北大西洋露脊鲸",en:"North Atlantic right whale",sci:"Eubalaena glacialis",iucn:"CR",trend:"declining",
+   points:[{year:2023,value:372}]},
+  {id:"bustard",section:"contrabass",zh:"大鸨",en:"Great Bustard",sci:"Otis tarda",iucn:"EN",trend:"declining",
+   points:[{year:2010,value:50500},{year:2022,value:33500},{year:2026,value:31300}]},
+  {id:"bengal-florican",section:"contrabass",zh:"孟加拉鸨",en:"Bengal Florican",sci:"Houbaropsis bengalensis",iucn:"CR",trend:"declining",
+   points:[{year:2006,value:416},{year:2012,value:216},{year:2018,value:104}]},
+  {id:"asianelephant",section:"contrabass",zh:"亚洲象",en:"Asian Elephant",sci:"Elephas maximus",iucn:"EN",trend:"declining",
+   points:[{year:2018,value:50000}]},
+  {id:"tiger",section:"brass",zh:"虎",en:"Tiger",sci:"Panthera tigris",iucn:"EN",trend:"recovering",
+   points:[{year:1973,value:1827},{year:2006,value:1411},{year:2010,value:1706},{year:2014,value:2226},{year:2018,value:2967},{year:2022,value:3682}]},
+  {id:"lion",section:"brass",zh:"非洲狮",en:"African Lion",sci:"Panthera leo",iucn:"VU",trend:"declining",
+   points:[{year:2002,value:37945},{year:2006,value:33160},{year:2013,value:32000},{year:2023,value:22500}]},
+  {id:"cheetah",section:"brass",zh:"猎豹",en:"Cheetah",sci:"Acinonyx jubatus",iucn:"VU",trend:"declining",
+   points:[{year:1999,value:1520},{year:2015,value:160}]},
+  {id:"stork",section:"brass",zh:"东方白鹳",en:"Oriental Stork",sci:"Ciconia boyciana",iucn:"EN",trend:"declining",
+   points:[{year:2000,value:3000},{year:2018,value:1750}]},
+  {id:"green-peafowl",section:"brass",zh:"绿孔雀",en:"Green Peafowl",sci:"Pavo muticus",iucn:"EN",trend:"declining",
+   points:[{year:1995,value:950},{year:2016,value:210}]},
+  {id:"hainan-peacockpheasant",section:"brass",zh:"海南孔雀雉",en:"Hainan Peacock-pheasant",sci:"Polyplectron katsumatae",iucn:"EN",trend:"declining",
+   points:[{year:1990,value:2775},{year:2000,value:300}]},
+  {id:"kakapo",section:"solo",zh:"鸮鹦鹉",en:"Kākāpō",sci:"Strigops habroptila",iucn:"CR",trend:"recovering",
+   points:[{year:2026,value:325}]},
+  {id:"scalysided-merganser",section:"solo",zh:"中华秋沙鸭",en:"Scaly-sided Merganser",sci:"Mergus squamatus",iucn:"EN",trend:"declining",
+   points:[{year:1982,value:1000},{year:2012,value:448}]},
+  {id:"emberiza",section:"woodwind",zh:"黄胸鹀",en:"Yellow-breasted bunting",sci:"Emberiza aureola",iucn:"CR",trend:"declining",
+   points:[{year:2013,value:12}]},
+  {id:"spoonbill",section:"woodwind",zh:"勺嘴鹬",en:"Spoon-billed sandpiper",sci:"Calidris pygmaea",iucn:"CR",trend:"declining",
+   points:[{year:2024,value:443}]},
+  {id:"saker-falcon",section:"woodwind",zh:"猎隼",en:"Saker Falcon",sci:"Falco cherrug",iucn:"EN",trend:"declining",
+   points:[{year:1990,value:22100},{year:2013,value:10500}]},
+  {id:"coral",section:"texture",zh:"珊瑚礁",en:"Coral reef",sci:"Reef-building corals",iucn:"—",trend:"tipping-risk",
+   points:[]},
+  {id:"bumblebee",section:"texture",zh:"熊蜂属",en:"Bumblebees (genus Bombus)",sci:"Bombus spp.",iucn:"—",trend:"declining",
+   points:[{year:1998,value:100},{year:2020,value:54}]},
+  {id:"vaquita",section:"texture",zh:"小头鼠海豚",en:"Vaquita",sci:"Phocoena sinus",iucn:"CR",trend:"declining",
+   points:[{year:1997,value:567},{year:2008,value:245},{year:2015,value:60},{year:2023,value:10},{year:2024,value:7}]},
+  {id:"whiteheaded-duck",section:"texture",zh:"白头硬尾鸭",en:"White-headed Duck",sci:"Oxyura leucocephala",iucn:"EN",trend:"declining",
+   points:[{year:1900,value:100000},{year:1996,value:20000},{year:2003,value:10500},{year:2017,value:7000}]}
+];
+
+const SECTIONS = {
+  contrabass:{zh:"低音声部",en:"Contrabass",color:"#7fd8b0"},
+  brass:{zh:"铜管声部",en:"Brass",color:"#e8b25c"},
+  solo:{zh:"独奏声部",en:"Solo",color:"#ffd08a"},
+  woodwind:{zh:"木管声部",en:"Woodwind",color:"#9dc98a"},
+  texture:{zh:"织体声部",en:"Texture",color:"#9aa0b4"}
+};
+
+const SECTION_ORDER = ["contrabass","brass","solo","woodwind","texture"];
+const MIN_YEAR = 1970;
+const MAX_YEAR = 2050;
+const YEAR_SPAN = MAX_YEAR - MIN_YEAR;
+const SECTION_WIDTH = 700;  // px per section lane
+const RULER_LEFT_PAD = 160;
+
+function yearToX(year) {
+  return RULER_LEFT_PAD + ((year - MIN_YEAR) / YEAR_SPAN) * (SECTION_ORDER.length * SECTION_WIDTH);
+}
+
+function iucnColor(iucn) {
+  if (iucn === "CR") return "var(--cr)";
+  if (iucn === "EN") return "var(--en)";
+  if (iucn === "VU") return "var(--vu)";
+  return "var(--ink-faint)";
+}
+
+function formatNum(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + "M";
+  if (n >= 1000) return (n/1000).toFixed(1) + "K";
+  return String(n);
+}
+
+// Build ruler
+const ruler = document.getElementById("ruler");
+const rulerInner = document.createElement("div");
+rulerInner.className = "ruler-inner";
+rulerInner.style.width = (SECTION_ORDER.length * SECTION_WIDTH + RULER_LEFT_PAD) + "px";
+ruler.appendChild(rulerInner);
+
+for (let yr = 1970; yr <= 2050; yr += 5) {
+  const x = yearToX(yr);
+  const isMajor = yr % 10 === 0;
+  const tick = document.createElement("div");
+  tick.className = "ruler-tick" + (isMajor ? " major" : "");
+  tick.style.left = x + "px";
+  rulerInner.appendChild(tick);
+
+  if (isMajor) {
+    const lbl = document.createElement("div");
+    lbl.className = "ruler-maj-label";
+    lbl.style.left = x + "px";
+    lbl.textContent = yr;
+    rulerInner.appendChild(lbl);
+  } else if (yr % 20 === 5 || yr % 20 === 15) {
+    const lbl = document.createElement("div");
+    lbl.className = "ruler-label";
+    lbl.style.left = x + "px";
+    lbl.textContent = yr;
+    rulerInner.appendChild(lbl);
+  }
+}
+
+// Build scrollable content
+const scrollInner = document.getElementById("scrollInner");
+
+const grouped = {};
+SECTION_ORDER.forEach(s => grouped[s] = []);
+ORCHESTRA.forEach(sp => {
+  if (grouped[sp.section]) grouped[sp.section].push(sp);
+});
+
+const totalWidth = SECTION_ORDER.length * (160 + SECTION_WIDTH);
+
+SECTION_ORDER.forEach((secKey, si) => {
+  const sec = SECTIONS[secKey];
+  const species = grouped[secKey];
+  const lane = document.createElement("div");
+  lane.className = "section-lane";
+  lane.style.minWidth = (160 + SECTION_WIDTH) + "px";
+
+  // Section title
+  const title = document.createElement("div");
+  title.className = "section-title";
+  title.innerHTML = `<div class="zh">${sec.zh}</div><div class="en">${sec.en}</div><div class="count">${species.length} 种</div>`;
+  lane.appendChild(title);
+
+  // Species strip
+  const strip = document.createElement("div");
+  strip.className = "species-strip";
+  strip.style.minWidth = SECTION_WIDTH + "px";
+
+  species.forEach(sp => {
+    const row = document.createElement("div");
+    row.className = "species-row";
+
+    // Info
+    const badge = sp.iucn !== "—" ? `<span class="sp-badge ${sp.iucn}">${sp.iucn}</span>` : "";
+    const info = document.createElement("div");
+    info.className = "sp-info";
+    info.innerHTML = `<div class="sp-name">${sp.zh} ${badge}<span class="sci">${sp.sci}</span></div>`;
+    row.appendChild(info);
+
+    // Sparkline
+    const sparkDiv = document.createElement("div");
+    sparkDiv.className = "sp-spark";
+    if (sp.points.length >= 2) {
+      const pts = sp.points;
+      const minYr = Math.min(...pts.map(p=>p.year));
+      const maxYr = Math.max(...pts.map(p=>p.year));
+      const minVal = Math.min(...pts.map(p=>p.value));
+      const maxVal = Math.max(...pts.map(p=>p.value));
+      const svgW = 400;
+      const svgH = 36;
+      const pad = 8;
+
+      const scaleX = yr => pad + ((yr - minYr) / (maxYr - minYr || 1)) * (svgW - pad*2);
+      const scaleY = val => svgH - pad - ((val - minVal) / (maxVal - minVal || 1)) * (svgH - pad*2);
+
+      const linePts = pts.map(p => `${scaleX(p.year).toFixed(1)},${scaleY(p.value).toFixed(1)}`).join(" ");
+      const areaPts = `${scaleX(pts[0].year).toFixed(1)},${svgH} ` + linePts + ` ${scaleX(pts[pts.length-1].year).toFixed(1)},${svgH}`;
+      const col = iucnColor(sp.iucn);
+
+      sparkDiv.innerHTML = `<svg viewBox="0 0 ${svgW} ${svgH}" preserveAspectRatio="none">
+        <polygon points="${areaPts}" fill="${col}" fill-opacity=".12"/>
+        <polyline points="${linePts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>
+        ${pts.map(p => `<circle cx="${scaleX(p.year).toFixed(1)}" cy="${scaleY(p.value).toFixed(1)}" r="3" fill="${col}" fill-opacity=".8"/>`).join("")}
+      </svg>`;
+    } else if (sp.points.length === 1) {
+      const val = sp.points[0].value;
+      const col = iucnColor(sp.iucn);
+      sparkDiv.innerHTML = `<svg viewBox="0 0 400 36" preserveAspectRatio="none">
+        <circle cx="200" cy="18" r="5" fill="${col}" fill-opacity=".8"/>
+        <line x1="190" y1="18" x2="210" y2="18" stroke="${col}" stroke-width="1.5" stroke-opacity=".4"/>
+      </svg>`;
+    } else {
+      sparkDiv.innerHTML = `<svg viewBox="0 0 400 36" preserveAspectRatio="none">
+        <line x1="40" y1="18" x2="360" y2="18" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="4,4" stroke-opacity=".3"/>
+        <text x="200" y="22" text-anchor="middle" fill="var(--ink-faint)" font-size="9" font-family="var(--mono)">无数据</text>
+      </svg>`;
+    }
+    row.appendChild(sparkDiv);
+
+    // Latest value
+    const lastPt = sp.points[sp.points.length - 1];
+    const valDiv = document.createElement("div");
+    valDiv.className = "sp-value";
+    valDiv.innerHTML = lastPt
+      ? `<span style="color:${iucnColor(sp.iucn)}">${formatNum(lastPt.value)}</span> <span style="color:var(--ink-faint);font-size:8px">${lastPt.year}</span>`
+      : `—`;
+    row.appendChild(valDiv);
+
+    // Tooltip on hover
+    row.addEventListener("mouseenter", (e) => {
+      const tip = document.getElementById("tooltip");
+      tip.querySelector(".tzh").textContent = sp.zh + " · " + sp.en;
+      tip.querySelector(".ten").textContent = sp.sci;
+      if (lastPt) {
+        tip.querySelector(".tyr").textContent = lastPt.year + " 年";
+        tip.querySelector(".tval").textContent = "种群估计: " + formatNum(lastPt.value);
+      } else {
+        tip.querySelector(".tyr").textContent = "";
+        tip.querySelector(".tval").textContent = "暂无定量数据";
+      }
+      tip.classList.add("show");
+    });
+    row.addEventListener("mousemove", (e) => {
+      const tip = document.getElementById("tooltip");
+      tip.style.left = (e.clientX + 16) + "px";
+      tip.style.top = (e.clientY - 10) + "px";
+    });
+    row.addEventListener("mouseleave", () => {
+      document.getElementById("tooltip").classList.remove("show");
+    });
+
+    strip.appendChild(row);
+  });
+
+  lane.appendChild(strip);
+  scrollInner.appendChild(lane);
+});
+
+// Mouse wheel → horizontal scroll
+const scrollWrap = document.getElementById("scrollWrap");
+scrollWrap.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  scrollWrap.scrollLeft += e.deltaY * 2;
+}, {passive: false});
+
+// Touch drag for mobile
+let touchStartX = 0;
+let scrollStart = 0;
+scrollWrap.addEventListener("touchstart", e => {
+  touchStartX = e.touches[0].clientX;
+  scrollStart = scrollWrap.scrollLeft;
+});
+scrollWrap.addEventListener("touchmove", e => {
+  const dx = touchStartX - e.touches[0].clientX;
+  scrollWrap.scrollLeft = scrollStart + dx;
+});
+
+// 2050 warning overlay + ruler sync
+const warning = document.getElementById("warningOverlay");
+const hint = document.getElementById("scrollHint");
+const rulerEl = document.getElementById("ruler");
+scrollWrap.addEventListener("scroll", () => {
+  const pct = scrollWrap.scrollLeft / (scrollWrap.scrollWidth - scrollWrap.clientWidth);
+  if (pct > 0.75) {
+    warning.classList.add("show");
+  } else {
+    warning.classList.remove("show");
+  }
+  if (scrollWrap.scrollLeft > 60) {
+    hint.style.opacity = "0";
+  } else {
+    hint.style.opacity = "";
+  }
+  // Sync ruler with scroll
+  rulerEl.scrollLeft = scrollWrap.scrollLeft;
+});
+</script>
+</body>
+</html>

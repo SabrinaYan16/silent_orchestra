@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>概念 C · 瀑布声谱 — The Silent Orchestra</title>
+<style>
+:root{
+  --hall:#080a12; --hall2:#0d1120; --stage:#141a2e;
+  --ink:#f2ece0; --ink-dim:#9aa0b4; --ink-faint:#5d6478;
+  --amber:#e8b25c; --amber-hot:#ffd08a;
+  --line:#232a44; --line-soft:#1a2038;
+  --alive:#7fd8b0; --fading:#e89a5c; --gone:#8a5c72; --unknown:#4a5270;
+  --cr:#f0837f; --en:#e8a25c; --vu:#e0c86a;
+  --serif: "Songti SC","Source Han Serif SC","Noto Serif CJK SC",Georgia,serif;
+  --sans: "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono: ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--hall);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;overflow:hidden;height:100vh}
+
+/* === HEADER === */
+.page-header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 40px 12px;
+  background:linear-gradient(180deg,rgba(8,10,18,.98) 0%,rgba(8,10,18,.85) 80%,transparent);
+  display:flex;align-items:flex-end;justify-content:space-between;
+}
+.page-header h1{
+  font-family:var(--serif);font-weight:400;font-size:18px;letter-spacing:.03em;
+}
+.page-header h1 .concept{
+  display:block;font-family:var(--mono);font-size:9px;letter-spacing:.28em;color:var(--amber);
+  text-transform:uppercase;margin-bottom:3px;
+}
+
+/* === CONTROLS === */
+.controls{
+  position:fixed;top:54px;right:40px;z-index:100;
+  display:flex;align-items:center;gap:12px;
+}
+.play-btn{
+  background:none;border:1px solid var(--amber);color:var(--amber-hot);
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;padding:6px 16px;
+  cursor:pointer;transition:.3s;text-transform:uppercase;
+}
+.play-btn:hover{background:var(--amber);color:var(--hall)}
+.play-btn.on{background:var(--amber);color:var(--hall)}
+
+.speed-label{
+  font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.1em;
+}
+
+/* === SCROLLABLE CONTAINER === */
+.waterfall-scroll{
+  position:fixed;top:56px;left:0;right:0;bottom:36px;
+  overflow-y:auto;overflow-x:hidden;
+  padding:16px 40px 20px;
+}
+
+/* === YEAR AXIS (top) === */
+.year-axis{
+  position:relative;height:28px;margin-left:220px;margin-bottom:8px;
+  border-bottom:1px solid var(--line-soft);
+}
+.year-axis .tick{
+  position:absolute;bottom:0;width:1px;height:6px;background:var(--line);
+}
+.year-axis .tick.major{height:12px;background:var(--ink-faint)}
+.year-axis .ylabel{
+  position:absolute;bottom:14px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.06em;
+  white-space:nowrap;
+}
+
+/* === SPECIES ROW === */
+.sp-row{
+  display:flex;align-items:stretch;gap:0;
+  margin-bottom:3px;
+  border-radius:3px;
+  transition:background .3s;
+  position:relative;
+}
+.sp-row:hover{background:rgba(232,178,92,.04)}
+
+/* --- info panel (left) --- */
+.sp-info{
+  width:220px;min-width:220px;flex-shrink:0;
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px 8px 8px;
+  border-right:1px solid var(--line-soft);
+}
+.sp-thumb{
+  width:38px;height:38px;border-radius:50%;overflow:hidden;flex-shrink:0;
+  border:1.5px solid var(--line);filter:saturate(.5) brightness(.5);
+  transition:filter .4s,border-color .4s;background:#0e1322;
+}
+.sp-row:hover .sp-thumb{filter:saturate(.8) brightness(.7);border-color:var(--line)}
+.sp-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.sp-meta{min-width:0}
+.sp-zh{
+  font-family:var(--serif);font-size:12.5px;color:var(--ink-dim);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;transition:color .3s;
+}
+.sp-row:hover .sp-zh{color:var(--ink)}
+.sp-en{
+  font-size:9.5px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-top:1px;
+}
+.sp-badge{
+  display:inline-block;font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;
+  padding:1px 4px;border:1px solid;border-radius:2px;margin-left:4px;vertical-align:middle;
+}
+.sp-badge.CR{color:var(--cr);border-color:var(--cr)}
+.sp-badge.EN{color:var(--en);border-color:var(--en)}
+.sp-badge.VU{color:var(--vu);border-color:var(--vu)}
+
+/* --- waterfall canvas (right) --- */
+.sp-waterfall{
+  flex:1;position:relative;overflow:hidden;
+  min-height:54px;
+}
+.waterfall-canvas{
+  width:100%;height:100%;display:block;
+}
+
+/* --- scanner line --- */
+.scanner{
+  position:absolute;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,transparent 5%,rgba(232,178,92,.7) 50%,transparent 95%);
+  box-shadow:0 0 12px 3px rgba(232,178,92,.3);
+  pointer-events:none;
+  z-index:5;
+  opacity:0;transition:opacity .4s;
+}
+.sp-row.playing .scanner{opacity:1;animation:scanMove var(--scan-duration, 8s) linear infinite}
+@keyframes scanMove{0%{left:0%}100%{left:100%}}
+
+/* --- glow pulse on playing --- */
+.sp-row.playing .waterfall-canvas{
+  filter:brightness(1.08) saturate(1.1);
+}
+
+/* === LEGEND BAR === */
+.legend-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:90;
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  padding:8px 40px;
+  background:linear-gradient(0deg,rgba(8,10,18,.96),transparent);
+  font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.1em;
+}
+.legend-bar .grad-sample{
+  display:inline-block;width:80px;height:10px;border-radius:2px;
+  vertical-align:middle;margin-right:5px;
+}
+
+/* === TOOLTIP === */
+.tip{
+  position:fixed;z-index:200;padding:10px 14px;
+  background:rgba(14,19,34,.96);border:1px solid var(--line);
+  border-radius:4px;pointer-events:none;opacity:0;transition:opacity .2s;
+  backdrop-filter:blur(12px);max-width:240px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.tip.show{opacity:1}
+.tip .tzh{font-family:var(--serif);font-size:14px;color:var(--ink)}
+.tip .ten{font-size:10px;color:var(--ink-dim);margin-top:2px}
+.tip .tiucn{font-family:var(--mono);font-size:9px;margin-top:6px;letter-spacing:.1em}
+.tip .tval{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:2px}
+
+/* === GRAIN === */
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  opacity:.3;mix-blend-mode:overlay;
+  background-image:radial-gradient(rgba(255,255,255,.05) .5px, transparent .5px);
+  background-size:3px 3px;
+}
+
+/* === SECTION DIVIDER === */
+.section-divider{
+  margin-left:220px;margin:12px 0 8px;
+  display:flex;align-items:center;gap:12px;
+}
+.section-divider .sd-line{flex:1;height:1px;background:var(--line-soft)}
+.section-divider .sd-text{
+  font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:.18em;
+  text-transform:uppercase;white-space:nowrap;
+}
+
+/* === SCROLLBAR === */
+.waterfall-scroll::-webkit-scrollbar{width:6px}
+.waterfall-scroll::-webkit-scrollbar-track{background:var(--hall)}
+.waterfall-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>
+    <span class="concept">Concept C · Prototype</span>
+    瀑布声谱 · 濒危物种种群频谱
+  </h1>
+</div>
+
+<div class="controls">
+  <span class="speed-label">SCAN</span>
+  <button class="play-btn" id="playBtn" onclick="togglePlay()">▶ 播放</button>
+</div>
+
+<div class="waterfall-scroll" id="scrollArea"></div>
+
+<div class="tip" id="tip">
+  <div class="tzh"></div>
+  <div class="ten"></div>
+  <div class="tiucn"></div>
+  <div class="tval"></div>
+</div>
+
+<div class="legend-bar">
+  <span>种群水平:</span>
+  <span><span class="grad-sample" style="background:linear-gradient(90deg,#1a5c5a,#4ecdc4,#7fd8b0)"></span>高</span>
+  <span><span class="grad-sample" style="background:linear-gradient(90deg,#e8a25c,#f0837f)"></span>低</span>
+  <span><span class="grad-sample" style="background:#1a1e2e"></span>无数据</span>
+  <span style="margin-left:16px;color:var(--ink-dim)">竖线 = 当前扫描位置</span>
+</div>
+
+<script>
+const ORCHESTRA = [
+  {id:"bluewhale",section:"contrabass",zh:"蓝鲸",en:"Blue whale",sci:"Balaenoptera musculus",iucn:"EN",trend:"recovering",
+   points:[{year:1981,value:453},{year:1988,value:559},{year:1998,value:2280}]},
+  {id:"rightwhale",section:"contrabass",zh:"北大西洋露脊鲸",en:"North Atlantic right whale",sci:"Eubalaena glacialis",iucn:"CR",trend:"declining",
+   points:[{year:2023,value:372}]},
+  {id:"bustard",section:"contrabass",zh:"大鸨",en:"Great Bustard",sci:"Otis tarda",iucn:"EN",trend:"declining",
+   points:[{year:2010,value:50500},{year:2022,value:33500},{year:2026,value:31300}]},
+  {id:"bengal-florican",section:"contrabass",zh:"孟加拉鸨",en:"Bengal Florican",sci:"Houbaropsis bengalensis",iucn:"CR",trend:"declining",
+   points:[{year:2006,value:416},{year:2012,value:216},{year:2018,value:104}]},
+  {id:"asianelephant",section:"contrabass",zh:"亚洲象",en:"Asian Elephant",sci:"Elephas maximus",iucn:"EN",trend:"declining",
+   points:[{year:2018,value:50000}]},
+  {id:"tiger",section:"brass",zh:"虎",en:"Tiger",sci:"Panthera tigris",iucn:"EN",trend:"recovering",
+   points:[{year:1973,value:1827},{year:2006,value:1411},{year:2010,value:1706},{year:2014,value:2226},{year:2018,value:2967},{year:2022,value:3682}]},
+  {id:"lion",section:"brass",zh:"非洲狮",en:"African Lion",sci:"Panthera leo",iucn:"VU",trend:"declining",
+   points:[{year:2002,value:37945},{year:2006,value:33160},{year:2013,value:32000},{year:2023,value:22500}]},
+  {id:"cheetah",section:"brass",zh:"猎豹",en:"Cheetah",sci:"Acinonyx jubatus",iucn:"VU",trend:"declining",
+   points:[{year:1999,value:1520},{year:2015,value:160}]},
+  {id:"stork",section:"brass",zh:"东方白鹳",en:"Oriental Stork",sci:"Ciconia boyciana",iucn:"EN",trend:"declining",
+   points:[{year:2000,value:3000},{year:2018,value:1750}]},
+  {id:"green-peafowl",section:"brass",zh:"绿孔雀",en:"Green Peafowl",sci:"Pavo muticus",iucn:"EN",trend:"declining",
+   points:[{year:1995,value:950},{year:2016,value:210}]},
+  {id:"hainan-peacockpheasant",section:"brass",zh:"海南孔雀雉",en:"Hainan Peacock-pheasant",sci:"Polyplectron katsumatae",iucn:"EN",trend:"declining",
+   points:[{year:1990,value:2775},{year:2000,value:300}]},
+  {id:"kakapo",section:"solo",zh:"鸮鹦鹉",en:"Kākāpō",sci:"Strigops habroptila",iucn:"CR",trend:"recovering",
+   points:[{year:2026,value:325}]},
+  {id:"scalysided-merganser",section:"solo",zh:"中华秋沙鸭",en:"Scaly-sided Merganser",sci:"Mergus squamatus",iucn:"EN",trend:"declining",
+   points:[{year:1982,value:1000},{year:2012,value:448}]},
+  {id:"emberiza",section:"woodwind",zh:"黄胸鹀",en:"Yellow-breasted bunting",sci:"Emberiza aureola",iucn:"CR",trend:"declining",
+   points:[{year:2013,value:12}]},
+  {id:"spoonbill",section:"woodwind",zh:"勺嘴鹬",en:"Spoon-billed sandpiper",sci:"Calidris pygmaea",iucn:"CR",trend:"declining",
+   points:[{year:2024,value:443}]},
+  {id:"saker-falcon",section:"woodwind",zh:"猎隼",en:"Saker Falcon",sci:"Falco cherrug",iucn:"EN",trend:"declining",
+   points:[{year:1990,value:22100},{year:2013,value:10500}]},
+  {id:"coral",section:"texture",zh:"珊瑚礁",en:"Coral reef",sci:"Reef-building corals",iucn:"—",trend:"tipping-risk",
+   points:[]},
+  {id:"bumblebee",section:"texture",zh:"熊蜂属",en:"Bumblebees",sci:"Bombus spp.",iucn:"—",trend:"declining",
+   points:[{year:1998,value:100},{year:2020,value:54}]},
+  {id:"vaquita",section:"texture",zh:"小头鼠海豚",en:"Vaquita",sci:"Phocoena sinus",iucn:"CR",trend:"declining",
+   points:[{year:1997,value:567},{year:2008,value:245},{year:2015,value:60},{year:2023,value:10},{year:2024,value:7}]},
+  {id:"whiteheaded-duck",section:"texture",zh:"白头硬尾鸭",en:"White-headed Duck",sci:"Oxyura leucocephala",iucn:"EN",trend:"declining",
+   points:[{year:1900,value:100000},{year:1996,value:20000},{year:2003,value:10500},{year:2017,value:7000}]}
+];
+
+const SECTIONS = {
+  contrabass:{zh:"低音声部 · Contrabass"},
+  brass:{zh:"铜管声部 · Brass"},
+  solo:{zh:"独奏声部 · Solo"},
+  woodwind:{zh:"木管声部 · Woodwind"},
+  texture:{zh:"织体声部 · Texture"}
+};
+const SECTION_ORDER = ["contrabass","brass","solo","woodwind","texture"];
+
+const MIN_YEAR = 1970;
+const MAX_YEAR = 2050;
+const YEAR_SPAN = MAX_YEAR - MIN_YEAR;
+const COLS = 200; // number of time columns in waterfall
+
+let isPlaying = false;
+
+function getGlobalMax() {
+  let mx = 0;
+  ORCHESTRA.forEach(sp => sp.points.forEach(p => { if(p.value > mx) mx = p.value; }));
+  return mx || 1;
+}
+
+// Interpolate value at a given year using nearest data or linear interpolation
+function getValueAtYear(sp, year) {
+  const pts = sp.points;
+  if (pts.length === 0) return null;
+  if (pts.length === 1) {
+    // Single point: spread influence ±10 years
+    const p = pts[0];
+    const dist = Math.abs(year - p.year);
+    if (dist > 12) return null;
+    const fade = 1 - dist / 12;
+    return p.value * fade;
+  }
+  // Find bracketing points
+  const sorted = [...pts].sort((a,b) => a.year - b.year);
+  if (year < sorted[0].year - 5) return null;
+  if (year > sorted[sorted.length-1].year + 5) return null;
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (year >= sorted[i].year && year <= sorted[i+1].year) {
+      const t = (year - sorted[i].year) / (sorted[i+1].year - sorted[i].year);
+      return sorted[i].value + t * (sorted[i+1].value - sorted[i].value);
+    }
+  }
+  // Extrapolate slightly near edges
+  if (year < sorted[0].year) {
+    const dist = sorted[0].year - year;
+    if (dist > 8) return null;
+    return sorted[0].value * (1 - dist / 8);
+  }
+  if (year > sorted[sorted.length-1].year) {
+    const dist = year - sorted[sorted.length-1].year;
+    if (dist > 8) return null;
+    const last = sorted[sorted.length-1].value;
+    const prev = sorted.length >= 2 ? sorted[sorted.length-2].value : last;
+    const trend = last - prev;
+    return Math.max(0, last + trend * (dist / (sorted[sorted.length-1].year - (sorted.length >= 2 ? sorted[sorted.length-2].year : sorted[sorted.length-1].year - 10))));
+  }
+  return null;
+}
+
+// Color mapping: value ratio → color
+function valueToColor(ratio) {
+  // ratio: 0 = low, 1 = high
+  // Low = red-orange, High = teal-green
+  const r = Math.round(30 + (1 - ratio) * 200);
+  const g = Math.round(60 + ratio * 120);
+  const b = Math.round(70 + ratio * 80);
+  return `rgb(${r},${g},${b})`;
+}
+
+function valueToColorAlpha(ratio, alpha) {
+  const r = Math.round(30 + (1 - ratio) * 200);
+  const g = Math.round(60 + ratio * 120);
+  const b = Math.round(70 + ratio * 80);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function formatNum(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + "M";
+  if (n >= 1000) return (n/1000).toFixed(1) + "K";
+  return String(n);
+}
+
+function iucnColor(iucn) {
+  if (iucn === "CR") return "var(--cr)";
+  if (iucn === "EN") return "var(--en)";
+  if (iucn === "VU") return "var(--vu)";
+  return "var(--ink-faint)";
+}
+
+// Build waterfall for a species
+function buildWaterfall(canvas, sp, globalMax) {
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Background
+  ctx.fillStyle = "rgba(14,19,34,.6)";
+  ctx.fillRect(0, 0, w, h);
+
+  const colW = w / COLS;
+  const rowH = h;
+
+  for (let c = 0; c < COLS; c++) {
+    const year = MIN_YEAR + (c / COLS) * YEAR_SPAN;
+    const val = getValueAtYear(sp, year);
+    if (val === null) {
+      // No data - dark gray with subtle noise
+      ctx.fillStyle = `rgba(26,30,46,${0.4 + Math.random() * 0.2})`;
+      ctx.fillRect(c * colW, 0, colW + 1, rowH);
+    } else {
+      const ratio = Math.min(1, val / globalMax);
+      // Draw gradient column (vertical variation for texture)
+      const grad = ctx.createLinearGradient(0, 0, 0, rowH);
+      const baseColor = valueToColor(ratio);
+      const baseAlpha = 0.5 + ratio * 0.5;
+      grad.addColorStop(0, valueToColorAlpha(ratio, baseAlpha * 0.6));
+      grad.addColorStop(0.3, valueToColorAlpha(ratio, baseAlpha));
+      grad.addColorStop(0.7, valueToColorAlpha(ratio, baseAlpha * 0.9));
+      grad.addColorStop(1, valueToColorAlpha(ratio, baseAlpha * 0.5));
+      ctx.fillStyle = grad;
+      ctx.fillRect(c * colW, 0, colW + 1, rowH);
+
+      // Add subtle horizontal scanlines for texture
+      if (c % 4 === 0) {
+        ctx.fillStyle = `rgba(255,255,255,${0.02 + ratio * 0.03})`;
+        ctx.fillRect(c * colW, rowH * 0.3, colW, 1);
+      }
+    }
+  }
+
+  // Add a subtle top/bottom fade
+  const fadeGrad = ctx.createLinearGradient(0, 0, 0, 6);
+  fadeGrad.addColorStop(0, "rgba(8,10,18,.5)");
+  fadeGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = fadeGrad;
+  ctx.fillRect(0, 0, w, 6);
+
+  const fadeGrad2 = ctx.createLinearGradient(0, rowH - 6, 0, rowH);
+  fadeGrad2.addColorStop(0, "transparent");
+  fadeGrad2.addColorStop(1, "rgba(8,10,18,.5)");
+  ctx.fillStyle = fadeGrad2;
+  ctx.fillRect(0, rowH - 6, w, 6);
+}
+
+// Build the entire page
+function buildPage() {
+  const area = document.getElementById("scrollArea");
+  area.innerHTML = "";
+
+  const gMax = getGlobalMax();
+  const grouped = {};
+  SECTION_ORDER.forEach(s => grouped[s] = []);
+  ORCHESTRA.forEach(sp => { if(grouped[sp.section]) grouped[sp.section].push(sp); });
+
+  // Year axis
+  const axisHtml = `<div class="year-axis" id="yearAxis"></div>`;
+  area.innerHTML = axisHtml;
+  const axis = document.getElementById("yearAxis");
+  for (let yr = 1970; yr <= 2050; yr += 5) {
+    const x = ((yr - MIN_YEAR) / YEAR_SPAN) * 100;
+    const isMajor = yr % 10 === 0;
+    const tick = document.createElement("div");
+    tick.className = "tick" + (isMajor ? " major" : "");
+    tick.style.left = x + "%";
+    axis.appendChild(tick);
+    if (isMajor || yr % 20 === 5) {
+      const lbl = document.createElement("div");
+      lbl.className = "ylabel";
+      lbl.style.left = x + "%";
+      lbl.textContent = yr;
+      axis.appendChild(lbl);
+    }
+  }
+
+  SECTION_ORDER.forEach(secKey => {
+    const sec = SECTIONS[secKey];
+    const species = grouped[secKey];
+
+    // Section divider
+    const divider = document.createElement("div");
+    divider.className = "section-divider";
+    divider.innerHTML = `<div class="sd-line"></div><div class="sd-text">${sec.zh}</div><div class="sd-line"></div>`;
+    area.appendChild(divider);
+
+    species.forEach(sp => {
+      const row = document.createElement("div");
+      row.className = "sp-row";
+      row.dataset.id = sp.id;
+
+      // Info panel
+      const info = document.createElement("div");
+      info.className = "sp-info";
+      const badge = sp.iucn !== "—" ? `<span class="sp-badge ${sp.iucn}">${sp.iucn}</span>` : "";
+      const imgPath = `img/${sp.id}.jpg`;
+      info.innerHTML = `
+        <div class="sp-thumb"><img src="${imgPath}" alt="${sp.zh}" onerror="this.parentElement.innerHTML='🎵'"></div>
+        <div class="sp-meta">
+          <div class="sp-zh">${sp.zh}${badge}</div>
+          <div class="sp-en">${sp.en}</div>
+        </div>
+      `;
+      row.appendChild(info);
+
+      // Waterfall
+      const wf = document.createElement("div");
+      wf.className = "sp-waterfall";
+      wf.style.height = "54px";
+
+      const cvs = document.createElement("canvas");
+      cvs.className = "waterfall-canvas";
+      cvs.height = 54;
+      wf.appendChild(cvs);
+
+      // Scanner line
+      const scanner = document.createElement("div");
+      scanner.className = "scanner";
+      scanner.style.setProperty("--scan-duration", (6 + Math.random() * 4) + "s");
+      wf.appendChild(scanner);
+
+      row.appendChild(wf);
+
+      // Tooltip on hover
+      row.addEventListener("mouseenter", () => {
+        const tip = document.getElementById("tip");
+        tip.querySelector(".tzh").textContent = sp.zh + " · " + sp.en;
+        tip.querySelector(".ten").textContent = sp.sci;
+        const col = iucnColor(sp.iucn);
+        tip.querySelector(".tiucn").innerHTML = `<span style="color:${col}">${sp.iucn !== "—" ? sp.iucn : "—"}</span> · ${sp.trend === "declining" ? "↓ 下降" : sp.trend === "recovering" ? "↑ 恢复" : sp.trend}`;
+        const lastPt = sp.points[sp.points.length - 1];
+        tip.querySelector(".tval").textContent = lastPt ? `最近数据: ${formatNum(lastPt.value)} (${lastPt.year})` : "暂无定量数据";
+        tip.classList.add("show");
+      });
+      row.addEventListener("mousemove", e => {
+        const tip = document.getElementById("tip");
+        tip.style.left = (e.clientX + 16) + "px";
+        tip.style.top = (e.clientY - 10) + "px";
+      });
+      row.addEventListener("mouseleave", () => {
+        document.getElementById("tip").classList.remove("show");
+      });
+
+      area.appendChild(row);
+
+      // Draw waterfall after DOM insert
+      requestAnimationFrame(() => {
+        cvs.width = wf.offsetWidth * (window.devicePixelRatio || 1);
+        cvs.height = 54 * (window.devicePixelRatio || 1);
+        cvs.style.width = wf.offsetWidth + "px";
+        cvs.style.height = "54px";
+        const ctx = cvs.getContext("2d");
+        ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+        buildWaterfall(cvs, sp, gMax);
+      });
+    });
+  });
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  const btn = document.getElementById("playBtn");
+  btn.textContent = isPlaying ? "■ 停止" : "▶ 播放";
+  btn.classList.toggle("on", isPlaying);
+
+  document.querySelectorAll(".sp-row").forEach(row => {
+    row.classList.toggle("playing", isPlaying);
+  });
+}
+
+buildPage();
+window.addEventListener("resize", buildPage);
+</script>
+</body>
+</html>
