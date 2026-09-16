@@ -721,7 +721,7 @@ html,body{overflow:hidden;height:100vh}
     <button class="ctl" id="restartBtn" data-i18n="restart">↺ 重新开始</button>
     <div class="vol">
       <span data-i18n="volume">音量</span>
-      <input type="range" class="v" id="vol" min="0" max="100" value="60" aria-label="总音量" data-i18n-aria="master-volume">
+      <input type="range" class="v" id="vol" min="0" max="100" value="33" aria-label="总音量" data-i18n-aria="master-volume">
     </div>
     <div class="legend">
       <span data-i18n="legend-data"><i style="background:var(--alive)"></i>有数据</span>
@@ -1422,7 +1422,7 @@ function setVoiceGain(v, g){
 }
 
 /* ---------- clock ---------- */
-let year=Y0, playing=false, masterVol=.6, lastT=0;
+let year=Y0, playing=false, masterVol=.33, lastT=0;
 let soloVoice=null;
 const YEARS_PER_SEC = 4.6;
 const scrub = $("#scrub"), axisFill = $("#axisFill"), head = $("#head");
@@ -1584,7 +1584,7 @@ $("#begin").addEventListener("click", async ()=>{
   const card = btn.closest(".card");
   if (card) card.classList.add("fading");
   $("#curtain").classList.add("curtain-opening");
-  $("#loadnote").textContent="正在载入录音…";
+  $("#loadnote").textContent=T("正在载入录音…","Loading recordings…");
   try { initAudio(); started=true; }
   catch(err){
     console.warn("音频初始化失败，继续进入无声舞台:", err);
@@ -1781,7 +1781,7 @@ function openNoteScroll(id){
   /* Credits section */
   h+='<div class="ds-credits">';
   if(ca){
-    h+='<div class="ds-credit-line"><b>'+T("录音","Audio")+'</b> '+ca.file+' · '+ca.by+' · '+ca.lic;
+    h+='<div class="ds-credit-line"><b>'+T("录音","Audio")+'</b> '+ca.file+' · '+(LANG==='en'&&ca.byEn?ca.byEn:ca.by)+' · '+ca.lic;
     if (ca.src) h+=' · <a href="'+ca.src+'" target="_blank" rel="noopener">'+T("来源 ↗","Source ↗")+'</a>';
     h+='</div>';
     if (ca.warn) h+='<div class="ds-credit-line" style="color:var(--fading)">'+T("⚠ 已改动：","⚠ Modified: ")+ca.warn+'</div>';
@@ -1789,7 +1789,7 @@ function openNoteScroll(id){
     h+='<div class="ds-credit-line"><b>'+T("录音","Audio")+'</b> '+T("当前没有经过核实的真实录音","No verified real recording available")+'</div>';
   }
   if(ci){
-    h+='<div class="ds-credit-line"><b>'+T("照片","Photo")+'</b> '+ci.by+' · '+ci.lic;
+    h+='<div class="ds-credit-line"><b>'+T("照片","Photo")+'</b> '+(LANG==='en'&&ci.byEn?ci.byEn:ci.by)+' · '+(LANG==='en'&&ci.licEn?ci.licEn:ci.lic);
     if (ci.src) h+=' · <a href="'+ci.src+'" target="_blank" rel="noopener">'+T("来源 ↗","Source ↗")+'</a>';
     h+='</div>';
   }

@@ -147,7 +147,7 @@ const ORCHESTRA = [
   {
     id: "bumblebee",
     section: "texture",
-    zh: "熊蜂属", en: "Bumblebees (genus Bombus)", sci: "Bombus spp.（全球约 250 种）",
+    zh: "熊蜂属", en: "Bumblebees (genus Bombus)", sci: "Bombus spp.",
     scope: "属级整体：全球约 250 种，IUCN 已评估 153 种", scopeEn: "genus level: ~250 species worldwide, 153 assessed by IUCN",
     iucn: "—", iucnZh: "属级无统一评级（已评估物种中约 1/4 受威胁，北美含 4 种极危）",
     iucnEn: "No unified genus-level rating (~1/4 of assessed species threatened; 4 North American species Critically Endangered)",
