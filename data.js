@@ -28,7 +28,7 @@ const ORCHESTRA = [
     voice: "10–40 Hz 的次声脉冲",
     voiceEn: "infrasonic pulses",
     audioNote: "NOAA 原始录音，Commons 标注 speed 1x。实测该文件在 160–500 Hz 有强能量，因此未做任何变调即可听见。",
-    audioNoteEn: "Original NOAA recording, Commons lists speed 1x. Measurements show strong energy in the 160–500 Hz range, so it is audible without any pitch shifting.",
+    audioNoteEn: "Original NOAA recording, marked as 1x speed on Commons. Measurements show strong energy in the 160–500 Hz range, so it is audible without any pitch shifting.",
     points: [
       { year: 1981, value: 453,  type: "measured", cv: 0.40, note: "IDCR/SOWER 环极调查 CPI 中位年", noteEn: "Mid-year of the IDCR/SOWER circumpolar survey CPI" },
       { year: 1988, value: 559,  type: "measured", cv: 0.47, note: "CPII 中位年", noteEn: "Mid-year of CPII" },
@@ -202,7 +202,7 @@ const ORCHESTRA = [
     focus: "25% 50%",
     voice: "视频片段（物种介绍与水下声景）", voiceEn: "video excerpt (species introduction and underwater soundscape)",
     audioNote: "取自 Sea Shepherd Conservation Society 2025 年发布的《The Voice of the Vaquita》视频，CONANP 科学家在上加利福尼亚湾零容忍区域通过水听器录制的真实回声定位咔哒声（原频率约 139 kHz，已降频以便人耳可闻）。该视频发布于 Facebook、无明确许可——经作者决定使用并注明来源。",
-    audioNoteEn: "Taken from Sea Shepherd Conservation Society's 2025 video 'The Voice of the Vaquita': authentic echolocation clicks recorded by CONANP scientists via hydrophone in the zero-tolerance zone of the upper Gulf of California (original frequency ~139 kHz, pitch-shifted for human audibility). The video is hosted on Facebook with no explicit licence — used by the artist's decision with attribution.",
+    audioNoteEn: "Taken from Sea Shepherd Conservation Society's 2025 video 'The Voice of the Vaquita': authentic echolocation clicks recorded by CONANP scientists via hydrophone in the zero-tolerance zone of the upper Gulf of California (original frequency ~139 kHz, downsampled for human audibility). The video is hosted on Facebook with no explicit licence — used at the artist's discretion with attribution.",
     points: [
       { year: 1997, value: 567, type: "measured", note: "Jaramillo-Legorreta et al. 2019", noteEn: "Jaramillo-Legorreta et al. 2019" },
       { year: 2008, value: 245, type: "measured", note: "Jaramillo-Legorreta et al. 2019", noteEn: "Jaramillo-Legorreta et al. 2019" },
