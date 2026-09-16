@@ -34,8 +34,8 @@ body{min-height:100vh}
   box-shadow:inset 0 0 240px 70px rgba(0,0,0,.82)}
 
 /* --- curtain / opening --- */
-#curtain{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
-  background:transparent;pointer-events:none}
+#curtain{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:center;
+  background:transparent;pointer-events:none;overflow-y:auto}
 #curtain:not(.up){pointer-events:auto}
 #curtain.up{visibility:hidden;pointer-events:none}
 
@@ -73,7 +73,7 @@ body{min-height:100vh}
 #begin:focus-visible{outline:2px solid var(--amber-hot);outline-offset:4px}
 #begin.fading{transform:scale(.85);opacity:0;pointer-events:none}
 .card{position:relative;z-index:2;width:min(760px,92vw);text-align:center;padding:0 24px;pointer-events:auto;
-  transition:opacity .4s ease,transform .4s ease}
+  margin:auto;transition:opacity .4s ease,transform .4s ease}
 .card.fading{opacity:0;transform:translateY(-10px);pointer-events:none}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.34em;text-transform:uppercase;
   color:var(--amber);opacity:.85;margin-bottom:30px}
@@ -538,7 +538,16 @@ html,body{overflow:hidden;height:100vh}
   pointer-events:none;transition:opacity .4s ease;
   z-index:2}
 .ds-scroll-hint.hidden{opacity:0}
-.ds-scroll-hint::before{content:"↓ 向下滚动查看完整信息 ↓"}
+.ds-scroll-hint::before{content:var(--ds-hint, "↓ 向下滚动查看完整信息 ↓")}
+
+/* --- language switch --- */
+.lang-switch{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.lang-btn{
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+  padding:3px 8px;border:1px solid var(--line);background:none;
+  color:var(--ink-faint);cursor:pointer;transition:.25s;line-height:1.2}
+.lang-btn:hover{border-color:var(--amber);color:var(--amber)}
+.lang-btn.active{border-color:var(--amber);color:var(--amber-hot);background:rgba(232,178,92,.09)}
 
 /* --- scroll progress bar --- */
 .scroll-progress{position:fixed;bottom:138px;left:0;right:0;height:3px;z-index:91;
@@ -634,7 +643,7 @@ html,body{overflow:hidden;height:100vh}
   <div class="card">
     <div class="eyebrow">Twenty voices · One held note · 1970 → 2050</div>
     <h1>寂静的乐团<span class="en">The Silent Orchestra</span></h1>
-    <p class="lede">
+    <p class="lede" data-i18n="curtain-lede">
       二十个声部，二十种真实的声音。每一位演奏者都是一个真实的物种，
       用它<b>自己的录音</b>与<b>自己的样子</b>出场 ——
       蓝鲸与露脊鲸的低吟、大鸨与孟加拉鸨的求偶低鸣、非洲象的隆鸣、
@@ -643,7 +652,7 @@ html,body{overflow:hidden;height:100vh}
       以及六种鸟鸣与鸟叫。二十个席位，二十段真实的录音。录音无法完全核实之处——近缘物种、或来源仅有版权声明——我们如实标注，不假装完美。
       音量不是编排出来的，而是由<b>已发表的种群数据</b>驱动。
     </p>
-    <div class="warn">
+    <div class="warn" data-i18n="curtain-warn">
       <b>关于 2050 年：</b>本次检索没有为这二十个物种中的任何一个
       找到 2040–2050 年的已发表种群预测。所以时间轴走到 2050，
       但没有任何一条曲线被虚构地延伸下去。
@@ -651,11 +660,11 @@ html,body{overflow:hidden;height:100vh}
       乐团变得稀薄，是因为<b>监测停止了</b>，而不是因为我编造了灭绝。
       1970 年时几乎无人在演奏，也是同一个原因。
     </div>
-    <button id="begin" type="button">开场 · BEGIN</button>
-    <div class="load-note" id="loadnote">二十段录音将在点击后载入（约 6 MB）</div>
+    <button id="begin" type="button" data-i18n="begin-btn">开场 · BEGIN</button>
+    <div class="load-note" id="loadnote" data-i18n="load-note">二十段录音将在点击后载入（约 6 MB）</div>
   </div>
 </div>
-<div id="audhint" role="status">浏览器阻止了自动播放——点击任意位置开启声音</div>
+<div id="audhint" role="status" data-i18n="audhint">浏览器阻止了自动播放——点击任意位置开启声音</div>
 
 <div class="topbar">
   <div class="brand">寂静的乐团<span>The Silent Orchestra</span></div>
@@ -665,13 +674,17 @@ html,body{overflow:hidden;height:100vh}
   </div>
   <div class="lpi">
     <span class="big" id="lpiBig">−73%</span>
-    受监测野生动物种群规模的<b>平均变化率</b>，1970–2020，
-    基于近 35,000 个种群趋势、5,495 个物种。<br>
-    <a href="javascript:void(0)" onclick="openNotesOverlay()">节目单 ↗</a>
+    <span data-i18n="lpi-desc">受监测野生动物种群规模的<b>平均变化率</b>，1970–2020，
+    基于近 35,000 个种群趋势、5,495 个物种。</span><br>
+    <a href="javascript:void(0)" onclick="openNotesOverlay()" data-i18n="programme-link">节目单 ↗</a>
   </div>
   <div class="conductor-inline">
     <div class="baton" id="baton"></div>
-    <div class="podium-txt">指挥</div>
+    <div class="podium-txt" data-i18n="conductor">指挥</div>
+  </div>
+  <div class="lang-switch">
+    <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+    <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
   </div>
 </div>
 
@@ -683,11 +696,11 @@ html,body{overflow:hidden;height:100vh}
 <div class="scroll-wrap" id="scrollWrap">
   <div class="scroll-inner" id="scrollInner"></div>
 </div>
-<div class="scroll-hint" id="scrollHint">← 横向滚动浏览时间线 →</div>
+<div class="scroll-hint" id="scrollHint" data-i18n="scroll-hint">← 横向滚动浏览时间线 →</div>
 <div class="scroll-progress" id="scrollProgress"><div class="scroll-progress-thumb" id="scrollProgressThumb"></div></div>
 
 <div class="notes-overlay" id="notesOverlay">
-  <button class="ns-close" id="notesClose" aria-label="关闭" onclick="closeNotesOverlay()">✕</button>
+  <button class="ns-close" id="notesClose" aria-label="关闭" data-i18n-aria="close" onclick="closeNotesOverlay()">✕</button>
   <div class="notes-panel" id="notesPanel"></div>
 </div>
 
@@ -696,69 +709,69 @@ html,body{overflow:hidden;height:100vh}
     <div class="axis"></div>
     <div class="axis-fill" id="axisFill"></div>
     <div class="head" id="head"></div>
-    <input type="range" id="scrub" min="1970" max="2050" step="0.25" value="1970" aria-label="年份">
+    <input type="range" id="scrub" min="1970" max="2050" step="0.25" value="1970" aria-label="年份" data-i18n-aria="year-label">
   </div>
   <div class="controls">
-    <button class="ctl on" id="playBtn">‖ 暂停</button>
-    <button class="ctl" id="restartBtn">↺ 重新开始</button>
+<button class="ctl on" id="playBtn" data-i18n="playPause">‖ 暂停</button>
+    <button class="ctl" id="restartBtn" data-i18n="restart">↺ 重新开始</button>
     <div class="vol">
-      <span>音量</span>
-      <input type="range" class="v" id="vol" min="0" max="100" value="50" aria-label="总音量">
+      <span data-i18n="volume">音量</span>
+      <input type="range" class="v" id="vol" min="0" max="100" value="60" aria-label="总音量" data-i18n-aria="master-volume">
     </div>
     <div class="legend">
-      <span><i style="background:var(--alive)"></i>有数据</span>
-      <span><i style="background:var(--unknown);"></i>数据止于此</span>
-      <span><i style="background:rgba(127,216,176,.35)"></i>数据窗口</span>
+      <span data-i18n="legend-data"><i style="background:var(--alive)"></i>有数据</span>
+      <span data-i18n="legend-data-ends"><i style="background:var(--unknown);"></i>数据止于此</span>
+      <span data-i18n="legend-data-window"><i style="background:rgba(127,216,176,.35)"></i>数据窗口</span>
     </div>
   </div>
 </div>
 
 <div class="notes" id="notes">
-  <h2>节目单</h2>
-  <div class="sub">Programme notes · 数据与来源</div>
+  <h2 data-i18n="notes-title">节目单</h2>
+  <div class="sub" data-i18n="notes-sub">Programme notes · 数据与来源</div>
   <div class="ncols">
     <div class="ncol">
-      <h3>这件作品如何发声</h3>
-<p>每个声部的音量由该物种<b>自己的已发表数据</b>驱动，映射到它自身的历史基线或指数基准。</p>
-      <p>在首个数据点之前，席位是<b>暗的</b>：那不是「物种不存在」，而是<b>还没有人在数</b>。
+      <h3 data-i18n="notes-how">这件作品如何发声</h3>
+<p data-i18n="notes-how-p1">每个声部的音量由该物种<b>自己的已发表数据</b>驱动，映射到它自身的历史基线或指数基准。</p>
+      <p data-i18n="notes-how-p2">在首个数据点之前，席位是<b>暗的</b>：那不是「物种不存在」，而是<b>还没有人在数</b>。
         乐团随着监测的展开而逐渐成形。</p>
-<p>在最后一个数据点之后，声部转入<b>虚线状态</b>并降到很低的持续音。</p>
+<p data-i18n="notes-how-p3">在最后一个数据点之后，声部转入<b>虚线状态</b>并降到很低的持续音。</p>
     </div>
     <div class="ncol">
-      <h3>LPI 到底衡量什么</h3>
+      <h3 data-i18n="notes-lpi-title">LPI 到底衡量什么</h3>
       <p id="lpiWhat"></p>
       <p id="lpiCaveat" style="color:var(--ink-faint);font-size:12.2px"></p>
       <div id="lpiBreak"></div>
     </div>
     <div class="ncol">
-<h3>数据说明与局限</h3>
-      <p>研究过程中反复碰到的限制，一并写在这里：</p>
+<h3 data-i18n="notes-data-title">数据说明与局限</h3>
+      <p data-i18n="notes-data-intro">研究过程中反复碰到的限制，一并写在这里：</p>
       <ul>
-        <li>IUCN 红色名录网站与 API 返回 403，<b>官方 population trend 字段未能读取</b>；
+        <li data-i18n="notes-data-li1">IUCN 红色名录网站与 API 返回 403，<b>官方 population trend 字段未能读取</b>；
           名录类别改由 GBIF 托管的 IUCN 名录数据集获得。</li>
-<li>二十个物种<b>全部没有</b> 1970 年的点估计。最近的锚点分别是蓝鲸 1981、
+<li data-i18n="notes-data-li2">二十个物种<b>全部没有</b> 1970 年的点估计。最近的锚点分别是蓝鲸 1981、
             鸮鹦鹉 2026、黄胸鹀 2013、勺嘴鹬 2024、
             熊蜂属 2020、北大西洋露脊鲸 2023、小头鼠海豚 1997、大鸨 2010、
             东方白鹳 2000、中华秋沙鸭 1982、猎隼 1990、绿孔雀 1995、
             白头硬尾鸭 1900、孟加拉鸨 2006、海南孔雀雉 1990、
             虎 2022、非洲狮 2023、亚洲象 2018、猎豹 2015。
 珊瑚礁无时间序列。</li>
-        <li>泛欧农田鸟类指数（PECBMS/Eurostat）页面 404 或由脚本渲染，<b>未能取到数值</b>。</li>
+        <li data-i18n="notes-data-li3">泛欧农田鸟类指数（PECBMS/Eurostat）页面 404 或由脚本渲染，<b>未能取到数值</b>。</li>
       </ul>
     </div>
     <div class="ncol">
-      <h3>声音与影像的出处</h3>
-      <p>素材来自 Wikimedia Commons、xeno-canto、NOAA Fisheries、iNaturalist、
+      <h3 data-i18n="notes-source-title">声音与影像的出处</h3>
+      <p data-i18n="notes-source-p1">素材来自 Wikimedia Commons、xeno-canto、NOAA Fisheries、iNaturalist、
         PLoS ONE 与 NOAA SanctSound，下载后以 ffprobe 核对时长与编码。
         多数为 CC、CC0 或公有领域授权；点击任一席位可看到<b>逐条署名与许可</b>。</p>
-      <p>三处需要额外说明：<b>小头鼠海豚</b>的回声定位咔哒声来自 Sea Shepherd Conservation Society 发布的《The Voice of the Vaquita》（2025），
+      <p data-i18n="notes-source-p2">三处需要额外说明：<b>小头鼠海豚</b>的回声定位咔哒声来自 Sea Shepherd Conservation Society 发布的《The Voice of the Vaquita》（2025），
 CONANP 科学家在上加利福尼亚湾零容忍区域通过水听器录制，原频率约 139 kHz 已降频以便人耳可闻；
         来源为 Facebook 视频，此处以署名方式使用，如有版权问题可联系删除；
         <b>熊蜂属</b>使用的是近缘种 <i>Bombus impatiens</i> 的录音——
         属内下降最严重的种（<i>B. affinis</i>）没有公开可得的录音，
         录音代表属的典型声音，但不等同于受威胁种群；
         <b>珊瑚礁</b>使用 NOAA SanctSound 佛罗里达礁岛群水下声景（公有领域）。</p>
-      <p>所有录音均为原速，未做变调；仅做统一响度处理（loudnorm I=−19 LUFS）
+      <p data-i18n="notes-source-p3">所有录音均为原速，未做变调；仅做统一响度处理（loudnorm I=−19 LUFS）
         与首尾淡入淡出，否则原始素材相差近 <b>47 dB</b>。</p>
     </div>
   </div>
@@ -787,18 +800,203 @@ CONANP 科学家在上加利福尼亚湾零容忍区域通过水听器录制，�
 const Y0 = 1970, Y1 = 2050;
 const $ = s => document.querySelector(s);
 
+/* --- i18n --- */
+let LANG = (localStorage.getItem('so-lang') || 'zh');
+const I18N = {
+  zh: {
+    'begin-btn': '开场 · BEGIN',
+    'load-note': '二十段录音将在点击后载入（约 6 MB）',
+    'curtain-lede': '二十个声部，二十种真实的声音。每一位演奏者都是一个真实的物种，用它<b>自己的录音</b>与<b>自己的样子</b>出场 —— 蓝鲸与露脊鲸的低吟、大鸨与孟加拉鸨的求偶低鸣、非洲象的隆鸣、西部大猩猩的胸击、婆罗洲猩猩与黑猩猩的叫声、东方白鹳的喙击、鸮鹦鹉求偶的 booming、中华秋沙鸭的轻柔鸣叫，以及六种鸟鸣与鸟叫。二十个席位，二十段真实的录音。录音无法完全核实之处——近缘物种、或来源仅有版权声明——我们如实标注，不假装完美。音量不是编排出来的，而是由<b>已发表的种群数据</b>驱动。',
+    'curtain-warn': '<b>关于 2050 年：</b>本次检索没有为这二十个物种中的任何一个找到 2040–2050 年的已发表种群预测。所以时间轴走到 2050，但没有任何一条曲线被虚构地延伸下去。当一个声部的数据到期，它会转入<b>「数据止于此」</b>状态 —— 乐团变得稀薄，是因为<b>监测停止了</b>，而不是因为我编造了灭绝。1970 年时几乎无人在演奏，也是同一个原因。',
+    'audhint': '浏览器阻止了自动播放——点击任意位置开启声音',
+    'lpi-desc': '受监测野生动物种群规模的<b>平均变化率</b>，1970–2020，基于近 35,000 个种群趋势、5,495 个物种。',
+    'programme-link': '节目单 ↗',
+    'conductor': '指挥',
+    'scroll-hint': '← 横向滚动浏览时间线 →',
+    'playPause': '‖ 暂停',
+    'play': '▶ 播放',
+    'ensemble': '▶ 合奏',
+    'restart': '↺ 重新开始',
+    'volume': '音量',
+    'legend-data': '有数据',
+    'legend-data-ends': '数据止于此',
+    'legend-data-window': '数据窗口',
+    'notes-title': '节目单',
+    'notes-sub': 'Programme notes · 数据与来源',
+    'notes-how': '这件作品如何发声',
+    'notes-how-p1': '每个声部的音量由该物种<b>自己的已发表数据</b>驱动，映射到它自身的历史基线或指数基准。',
+    'notes-how-p2': '在首个数据点之前，席位是<b>暗的</b>：那不是「物种不存在」，而是<b>还没有人在数</b>。乐团随着监测的展开而逐渐成形。',
+    'notes-how-p3': '在最后一个数据点之后，声部转入<b>虚线状态</b>并降到很低的持续音。',
+    'notes-lpi-title': 'LPI 到底衡量什么',
+    'notes-data-title': '数据说明与局限',
+    'notes-data-intro': '研究过程中反复碰到的限制，一并写在这里：',
+    'notes-data-li1': 'IUCN 红色名录网站与 API 返回 403，<b>官方 population trend 字段未能读取</b>；名录类别改由 GBIF 托管的 IUCN 名录数据集获得。',
+    'notes-data-li2': '二十个物种<b>全部没有</b> 1970 年的点估计。最近的锚点分别是蓝鲸 1981、鸮鹦鹉 2026、黄胸鹀 2013、勺嘴鹬 2024、熊蜂属 2020、北大西洋露脊鲸 2023、小头鼠海豚 1997、大鸨 2010、东方白鹳 2000、中华秋沙鸭 1982、猎隼 1990、绿孔雀 1995、白头硬尾鸭 1900、孟加拉鸨 2006、海南孔雀雉 1990、虎 2022、非洲狮 2023、亚洲象 2018、猎豹 2015。珊瑚礁无时间序列。',
+    'notes-data-li3': '泛欧农田鸟类指数（PECBMS/Eurostat）页面 404 或由脚本渲染，<b>未能取到数值</b>。',
+    'notes-source-title': '声音与影像的出处',
+    'notes-source-p1': '素材来自 Wikimedia Commons、xeno-canto、NOAA Fisheries、iNaturalist、PLoS ONE 与 NOAA SanctSound，下载后以 ffprobe 核对时长与编码。多数为 CC、CC0 或公有领域授权；点击任一席位可看到<b>逐条署名与许可</b>。',
+    'notes-source-p2': '三处需要额外说明：<b>小头鼠海豚</b>的回声定位咔哒声来自 Sea Shepherd Conservation Society 发布的《The Voice of the Vaquita》（2025），CONANP 科学家在上加利福尼亚湾零容忍区域通过水听器录制，原频率约 139 kHz 已降频以便人耳可闻；来源为 Facebook 视频，此处以署名方式使用，如有版权问题可联系删除；<b>熊蜂属</b>使用的是近缘种 <i>Bombus impatiens</i> 的录音——属内下降最严重的种（<i>B. affinis</i>）没有公开可得的录音，录音代表属的典型声音，但不等同于受威胁种群；<b>珊瑚礁</b>使用 NOAA SanctSound 佛罗里达礁岛群水下声景（公有领域）。',
+    'notes-source-p3': '所有录音均为原速，未做变调；仅做统一响度处理（loudnorm I=−19 LUFS）与首尾淡入淡出，否则原始素材相差近 <b>47 dB</b>。',
+    'close': '关闭',
+    'year-label': '年份',
+    'master-volume': '总音量',
+    'ds-scroll-hint': '↓ 向下滚动查看完整信息 ↓'
+  },
+  en: {
+    'begin-btn': 'Begin',
+    'load-note': 'Twenty recordings will load after you click (~6 MB)',
+    'curtain-lede': 'Twenty voices, twenty real sounds. Every player is a real species, appearing with its <b>own recording</b> and <b>own likeness</b> — the low moans of blue and right whales, the booming courtship of great and Bengal bustards, the rumbling of African elephants, the chest-beating of western gorillas, the calls of Bornean orangutans and chimpanzees, the bill-clattering of oriental storks, the booming of kākāpō courtship, the soft calls of scaly-sided mergansers, and six more bird songs and calls. Twenty seats, twenty real recordings. Where a recording cannot be fully verified — a close relative, or a source with only a copyright notice — we say so plainly, and do not pretend to perfection. The volume is not composed; it is driven by <b>published population data</b>.',
+    'curtain-warn': '<b>About 2050:</b> this search found no published population projections for 2040–2050 for any of the twenty species. So the timeline reaches 2050, but no curve is fictitiously extended. When a voice\u2019s data runs out, it moves into the <b>\u201cdata ends here\u201d</b> state — the orchestra thins because <b>monitoring stopped</b>, not because an extinction was invented. In 1970 almost no one was playing, for the same reason.',
+    'audhint': 'Autoplay was blocked — click anywhere to enable sound',
+    'lpi-desc': 'The <b>average change</b> in monitored wildlife population sizes, 1970–2020, based on nearly 35,000 population trends across 5,495 species.',
+    'programme-link': 'Programme ↗',
+    'conductor': 'Conductor',
+    'scroll-hint': '← Scroll horizontally through time →',
+    'playPause': '‖ Pause',
+    'play': '▶ Play',
+    'ensemble': '▶ Ensemble',
+    'restart': '↺ Restart',
+    'volume': 'Volume',
+    'legend-data': 'Data',
+    'legend-data-ends': 'Data ends here',
+    'legend-data-window': 'Data window',
+    'notes-title': 'Programme',
+    'notes-sub': 'Programme notes · Data & sources',
+    'notes-how': 'How this piece sounds',
+    'notes-how-p1': 'Each voice\u2019s volume is driven by that species\u2019 <b>own published data</b>, mapped to its own historical baseline or index reference.',
+    'notes-how-p2': 'Before the first data point, a seat is <b>dark</b>: not because the species is absent, but because <b>no one was counting yet</b>. The orchestra takes shape as monitoring unfolds.',
+    'notes-how-p3': 'After the last data point, the voice moves into a <b>dashed state</b> and drops to a very low sustained tone.',
+    'notes-lpi-title': 'What the LPI actually measures',
+    'notes-data-title': 'Data notes & limitations',
+    'notes-data-intro': 'The limitations we kept running into during research, all written down here:',
+    'notes-data-li1': 'The IUCN Red List website and API returned 403, so the <b>official population trend field could not be read</b>; Red List categories were instead obtained from the IUCN Red List dataset hosted by GBIF.',
+    'notes-data-li2': 'None of the twenty species has a <b>point estimate for 1970</b>. The nearest anchors are blue whale 1981, kākāpō 2026, yellow-breasted bunting 2013, spoon-billed sandpiper 2024, bumblebees 2020, North Atlantic right whale 2023, vaquita 1997, great bustard 2010, oriental stork 2000, scaly-sided merganser 1982, saker falcon 1990, green peafowl 1995, white-headed duck 1900, Bengal florican 2006, Hainan peacock-pheasant 1990, tiger 2022, African lion 2023, Asian elephant 2018, cheetah 2015. Coral reefs have no time series.',
+    'notes-data-li3': 'The Pan-European Common Bird Monitoring Scheme (PECBMS/Eurostat) page returned 404 or was script-rendered, so <b>no values could be retrieved</b>.',
+    'notes-source-title': 'Sources of sound & image',
+    'notes-source-p1': 'Material comes from Wikimedia Commons, xeno-canto, NOAA Fisheries, iNaturalist, PLoS ONE and NOAA SanctSound, with duration and encoding verified via ffprobe after download. Most are CC, CC0 or public domain licensed; click any seat to see <b>item-by-item credits and licences</b>.',
+    'notes-source-p2': 'Three items need extra explanation: the <b>vaquita</b> echolocation clicks come from <i>The Voice of the Vaquita</i> (2025) released by the Sea Shepherd Conservation Society, recorded by CONANP scientists via hydrophone in the Upper Gulf of California zero-tolerance zone; the original ~139 kHz frequency has been downsampled to be audible to human ears. The source is a Facebook video, used here with attribution; contact us to remove it if there are copyright concerns. For <b>bumblebees</b> we used a recording of the close relative <i>Bombus impatiens</i> — the most declining species in the genus (<i>B. affinis</i>) has no publicly available recording; the recording represents the genus\u2019s typical sound but is not the threatened population itself. For <b>coral reefs</b> we used the NOAA SanctSound Florida Keys underwater soundscape (public domain).',
+    'notes-source-p3': 'All recordings play at original speed with no pitch shifting; only loudness normalisation (loudnorm I=−19 LUFS) and fade in/out were applied, since the raw material otherwise differs by nearly <b>47 dB</b>.',
+    'close': 'Close',
+    'year-label': 'Year',
+    'master-volume': 'Master volume',
+    'ds-scroll-hint': '↓ Scroll down for full details ↓'
+  }
+};
+function setLang(l){
+  LANG = l;
+  try { localStorage.setItem('so-lang', l); } catch(e){}
+  document.documentElement.lang = (l==='zh') ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k = el.getAttribute('data-i18n');
+    if (I18N[l] && I18N[l][k] !== undefined) el.innerHTML = I18N[l][k];
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el=>{
+    const k = el.getAttribute('data-i18n-aria');
+    if (I18N[l] && I18N[l][k] !== undefined) el.setAttribute('aria-label', I18N[l][k]);
+  });
+  document.documentElement.style.setProperty('--ds-hint',
+    LANG==='zh' ? '↓ 向下滚动查看完整信息 ↓' : '↓ Scroll down for full details ↓');
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lang === l);
+  });
+  const panel = document.getElementById('notesPanel');
+  const notesSection = document.getElementById('notes');
+  if (panel && notesSection && !panel.classList.contains('hidden') && panel.innerHTML) {
+    panel.innerHTML = notesSection.innerHTML;
+  }
+  if (typeof refreshLang === 'function') refreshLang();
+}
+
+function T(zh, en){ return (LANG==='en' && en) ? en : zh; }
+
+function refreshLang(){
+  /* Guard: during initial load, VOICES/grouped/SECTIONS/LPI are in TDZ (const declared later) */
+  try { if (typeof VOICES === 'undefined') return; } catch(e){ return; }
+  /* If detail panel is open, close immediately and reopen in new language */
+  const dsEl = document.getElementById("detailInline");
+  if (dsEl && dsEl.dataset.speciesId) {
+    const spId = dsEl.dataset.speciesId;
+    dsEl.remove();
+    if (auditionEl){ auditionEl.pause(); auditionEl=null; }
+    if (soloFadeTimer){ clearInterval(soloFadeTimer); soloFadeTimer=null; }
+    soloVoice=null;
+    VOICES.forEach(v=>{ if(v.audio){ v.audio.pause(); v.audio.muted=false; } });
+    document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent=T('\u25b6 独奏','\u25b6 Solo')});
+    requestAnimationFrame(()=>requestAnimationFrame(()=>openNoteScroll(spId)));
+  }
+
+  /* Update section lane titles */
+  document.querySelectorAll('.section-lane').forEach(lane=>{
+    const secKey = lane.dataset.section;
+    const sec = SECTIONS[secKey];
+    if (!sec) return;
+    const titleEl = lane.querySelector('.section-title');
+    if (titleEl) {
+      const zhDiv = titleEl.querySelector('.sec-zh');
+      const enDiv = titleEl.querySelector('.sec-en');
+      const descDiv = titleEl.querySelector('.sec-desc');
+      const countDiv = titleEl.querySelector('.sec-count');
+      if (zhDiv) zhDiv.textContent = sec.zh;
+      if (enDiv) enDiv.textContent = sec.en;
+      if (descDiv) descDiv.textContent = (LANG==='en' && sec.descEn) ? sec.descEn : sec.desc;
+      if (countDiv) countDiv.textContent = grouped[secKey].length + T(" 种"," voices");
+    }
+  });
+
+  /* Update track row names, tags, aria-labels, solo buttons */
+  VOICES.forEach(v=>{
+    const sp = v.sp;
+    if (!v.el) return;
+    const nameEl = v.el.querySelector('.tr-name');
+    if (nameEl) nameEl.textContent = (LANG==='en' && sp.en) ? sp.en : sp.zh;
+    const tagEl = v.el.querySelector('.tag');
+    if (tagEl) tagEl.textContent = sp.iucn === "—" ? T("属级","genus-level") : sp.iucn;
+    const ariaName = (LANG==='en' && sp.en) ? sp.en : sp.zh;
+    v.el.setAttribute('aria-label', ariaName + " " + sp.sci);
+    if (v.soloBtn) v.soloBtn.textContent = soloVoice===v ? T('\u23f8 停止独奏','\u23f8 Stop solo') : T('\u25b6 独奏','\u25b6 Solo');
+    const imgEl = v.el.querySelector('.tr-port img');
+    if (imgEl) imgEl.alt = (LANG==='en' && sp.en) ? sp.en : sp.zh;
+    const handleEl = v.el.querySelector('.tr-handle');
+    if (handleEl) handleEl.title = T('拖拽排序','Drag to reorder');
+  });
+
+  /* Update era text */
+  $("#eraTxt").textContent = eraFor(year);
+
+  /* Update play/restart buttons */
+  if (soloVoice === null) {
+    const pb = $("#playBtn");
+    if (pb) pb.textContent = playing ? T("‖ 暂停","‖ Pause") : T("▶ 播放","▶ Play");
+  }
+
+  /* Re-populate LPI content */
+  $("#lpiWhat").innerHTML = (LANG==='en' ? LPI.whatItIsEn : LPI.whatItIs).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+  $("#lpiCaveat").textContent = LANG==='en' ? LPI.caveatEn : LPI.caveat;
+  {
+    let lpiH='<p style="font-size:12.3px;color:var(--ink-dim);margin-top:4px">'+
+      '<b>'+T("按生境","By habitat")+'</b>（'+LPI.period+'，'+(LANG==='en'?LPI.editionEn:LPI.edition)+'）</p><ul style="font-size:12.2px">';
+    LPI.realms.forEach(r=>lpiH+='<li>'+(LANG==='en'?r.kEn:r.k)+' <b style="color:var(--fading);font-family:var(--mono)">−'+r.v+'%</b></li>');
+    lpiH+='</ul><p style="font-size:12.3px;color:var(--ink-dim);margin-top:10px"><b>'+T("按区域","By region")+'</b></p><ul style="font-size:12.2px">';
+    LPI.regions.forEach(r=>lpiH+='<li>'+(LANG==='en'?r.kEn:r.k)+' <b style="color:var(--fading);font-family:var(--mono)">−'+r.v+'%</b></li>');
+    lpiH+='</ul>';
+    $("#lpiBreak").innerHTML=lpiH;
+  }
+}
+
+setLang(LANG);
+
 /* ---------- build per-species presence series from REAL data only ---------- */
 function buildSeries(sp){
   let pts = [];
   if (sp.id === "elephant" && sp.longTerm){
-    pts = [ {year:1964, level:1.00, label:"指数 100"},
-            {year:2016, level:0.30, label:"指数 30（样点平均 −70%）"} ];
+pts = [ {year:1964, level:1.00, label:T("指数 100","Index 100")},
+            {year:2016, level:0.30, label:T("指数 30（样点平均 −70%）","Index 30 (sample mean −70%)")} ];
     return {pts, first:1964, last:2016, kind:"index"};
   }
   if (!sp.points || !sp.points.length) return {pts:[], first:null, last:null, kind:"none"};
   const isIdx = sp.points[0].type === "index";
   if (isIdx){
-    pts = sp.points.map(p => ({year:p.year, level:Math.max(0, Math.min(1, p.value/100)), label:"指数 "+p.value}));
+    pts = sp.points.map(p => ({year:p.year, level:Math.max(0, Math.min(1, p.value/100)), label:T("指数 ","Index ")+p.value}));
     return {pts, first:pts[0].year, last:pts[pts.length-1].year, kind:"index"};
   }
   const vals = sp.points.map(p=>p.value);
@@ -909,8 +1107,8 @@ SECTION_ORDER.forEach(secKey => {
   title.innerHTML =
     '<div class="sec-zh">'+sec.zh+'</div>'+
     '<div class="sec-en">'+sec.en+'</div>'+
-    '<div class="sec-count">'+voices.length+' 种</div>'+
-    '<div class="sec-desc">'+sec.desc+'</div>';
+    '<div class="sec-count">'+voices.length + T(' 种',' voices')+'</div>'+
+    '<div class="sec-desc">'+(LANG==='en' && sec.descEn ? sec.descEn : sec.desc)+'</div>';
   lane.appendChild(title);
 
   const strip = document.createElement("div");
@@ -925,7 +1123,7 @@ SECTION_ORDER.forEach(secKey => {
     d.draggable = true;
     d.tabIndex = 0;
     d.setAttribute("role", "button");
-    d.setAttribute("aria-label", sp.zh + " " + sp.sci);
+    d.setAttribute("aria-label", (LANG==='en' && sp.en ? sp.en : sp.zh) + " " + sp.sci);
 
     const pts = sparkPoints(v);
     const area = sparkAreaPoints(v);
@@ -934,16 +1132,16 @@ SECTION_ORDER.forEach(secKey => {
     const dotCy = (v.series.length === 1) ? toSY(v.series[0].level).toFixed(1) : 0;
 
     d.innerHTML =
-      '<div class="tr-handle" title="拖拽排序">⠿</div>' +
+      '<div class="tr-handle" title="'+T('拖拽排序','Drag to reorder')+'">⠿</div>' +
       '<div class="tr-port">' +
-        '<img src="' + (sp.image || 'img/' + sp.id + '.jpg') + '" alt="' + sp.zh + '" loading="lazy" style="object-position:' + sp.focus + '">' +
+        '<img src="' + (sp.image || 'img/' + sp.id + '.jpg') + '" alt="' + (LANG==='en' && sp.en ? sp.en : sp.zh) + '" loading="lazy" style="object-position:' + sp.focus + '">' +
         '<div class="tr-halo"></div>' +
       '</div>' +
       '<div class="tr-info">' +
-        '<div class="tr-name">' + sp.zh + '</div>' +
+        '<div class="tr-name">' + (LANG==='en' && sp.en ? sp.en : sp.zh) + '</div>' +
         '<div class="tr-sci">' + sp.sci + '</div>' +
       '</div>' +
-      '<span class="tag t-' + sp.iucn + '">' + (sp.iucn === "—" ? "属级" : sp.iucn) + '</span>' +
+      '<span class="tag t-' + sp.iucn + '">' + (sp.iucn === "—" ? T("属级","genus-level") : sp.iucn) + '</span>' +
       '<div class="tr-spark"><svg viewBox="0 0 ' + SP_W + ' ' + SP_H + '" preserveAspectRatio="none">' +
         '<defs><clipPath id="spc-' + sp.id + '"><rect class="sp-clip" x="0" y="0" width="0" height="' + SP_H + '"/></clipPath></defs>' +
         (pts ? '<polyline class="sp-bg" points="' + pts + '"/>' : '') +
@@ -954,7 +1152,7 @@ SECTION_ORDER.forEach(secKey => {
       '</svg></div>' +
       '<div class="tr-metric"></div>' +
       '<div class="tr-bars">' + '<i></i>'.repeat(9) + '</div>' +
-      '<button class="solo-track-btn" type="button">▶ 独奏</button>';
+      '<button class="solo-track-btn" type="button">'+T('▶ 独奏','▶ Solo')+'</button>';
 
     strip.appendChild(d);
 
@@ -1172,7 +1370,7 @@ function initAudio(){
     a.muted=false; a.defaultMuted=false; a.playsInline=true;
     a.addEventListener("error", ()=>{
       console.warn("音频载入失败:", a.src, a.error);
-      if (v.metric) v.metric.textContent="音频载入失败";
+      if (v.metric) v.metric.textContent=T("音频载入失败","Audio failed to load");
     });
     a.addEventListener("canplay", ()=>{ v.audioReady=true; });
     v.audio=a;
@@ -1219,17 +1417,17 @@ function setVoiceGain(v, g){
 }
 
 /* ---------- clock ---------- */
-let year=Y0, playing=false, masterVol=.5, lastT=0;
+let year=Y0, playing=false, masterVol=.6, lastT=0;
 let soloVoice=null;
 const YEARS_PER_SEC = 4.6;
 const scrub = $("#scrub"), axisFill = $("#axisFill"), head = $("#head");
 const pct = y => ((y-Y0)/(Y1-Y0))*100;
 const eraFor = y => {
-  if (y<1981) return "序 · 几乎无人在监测";
-  if (y<1995) return "第一乐章 · 声部陆续入场";
-  if (y<2016) return "第二乐章 · 有增有减";
-  if (y<2026) return "第三乐章 · 数据陆续到期";
-  return "终曲 · 无预测可依";
+  if (y<1981) return T("序 · 几乎无人在监测","Overture · barely anyone is monitoring");
+  if (y<1995) return T("第一乐章 · 声部陆续入场","First movement · voices enter one by one");
+  if (y<2016) return T("第二乐章 · 有增有减","Second movement · some rise, some fall");
+  if (y<2026) return T("第三乐章 · 数据陆续到期","Third movement · data expires one by one");
+  return T("终曲 · 无预测可依","Finale · no projections to rely on");
 };
 
 function frame(t){
@@ -1255,9 +1453,9 @@ function render(){
   VOICES.forEach(v=>{
     const {level,state}=levelAt(v,year);
     let gain=0, lit=false;
-if (state==="in"){ gain=0.25 + level*0.55; lit=true; }
-    else if (state==="post"){ gain=0.18 + level*0.12; lit=true; }
-    else { gain=0.22; lit=true; }
+if (state==="in"){ gain=0.3 + level*0.55; lit=true; }
+    else if (state==="post"){ gain=0.22 + level*0.12; lit=true; }
+    else { gain=0.3; lit=true; }
 
     if (v.audio){
       const allowed = soloVoice === null || soloVoice === v;
@@ -1300,16 +1498,16 @@ if (state==="in"){ gain=0.25 + level*0.55; lit=true; }
     }
 
     /* metric text */
-    let m="";
-    if (state==="pre") m="未监测";
-    else if (state==="post") m="数据止于 "+v.last;
-    else if (v.kind==="index") m=Math.round(level*100)+" 指数";
+let m="";
+    if (state==="pre") m=T("未监测","unmonitored");
+    else if (state==="post") m=T("数据止于 ","data ends ")+v.last;
+    else if (v.kind==="index") m=Math.round(level*100)+T(" 指数"," index");
     else if (v.kind==="count"){
       const p=v.series, yy=year;
       let val=null;
       for(let i=0;i<p.length;i++) if(yy>=p[i].year) val=p[i];
       m = val? val.label : "";
-    } else if (v.kind==="none") m = v.sp.id==="bumblebee" ? "无时间序列" : "未核实";
+    } else if (v.kind==="none") m = v.sp.id==="bumblebee" ? T("无时间序列","no time series") : T("未核实","unverified");
     v.metric.textContent=m;
 
     /* spectrum bars */
@@ -1332,7 +1530,7 @@ if (state==="in"){ gain=0.25 + level*0.55; lit=true; }
 
 function setPlaying(p){
   playing=p;
-  $("#playBtn").textContent = p ? "‖ 暂停" : "▶ 播放";
+  $("#playBtn").textContent = p ? T("‖ 暂停","‖ Pause") : T("▶ 播放","▶ Play");
   $("#playBtn").classList.toggle("on", p);
   document.body.classList.toggle("playing", p);
   if (!p) VOICES.forEach(v=>{ if(v.audio && !v.audio.paused) v.audio.pause(); });
@@ -1346,13 +1544,13 @@ function startSolo(v, button){
     a.pause(); soloVoice=null; auditionEl=null;
     if (soloFadeTimer){ clearInterval(soloFadeTimer); soloFadeTimer=null; }
     VOICES.forEach(o=>{ if(o.audio) o.audio.muted=false; });
-    document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent='\u25b6 独奏'});
-    const nsBtn=$("#nsAudBtn"); if(nsBtn) nsBtn.textContent='\u25b6 独奏';
+    document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent=T('\u25b6 独奏','\u25b6 Solo')});
+    const nsBtn=$("#nsAudBtn"); if(nsBtn) nsBtn.textContent=T('\u25b6 独奏','\u25b6 Solo');
     setPlaying(true);
     return;
   }
   soloVoice=v; playing=false;
-  $("#playBtn").textContent="\u25b6 合奏"; $("#playBtn").classList.remove("on");
+  $("#playBtn").textContent=T("\u25b6 合奏","\u25b6 Ensemble"); $("#playBtn").classList.remove("on");
   VOICES.forEach(o=>{ if(o!==v && o.audio) { o.audio.pause(); o.audio.muted=true; } });
   a.muted=false; a.defaultMuted=false; a.currentTime=0;
   const targetVol = Math.max(.01, .55*masterVol);
@@ -1367,10 +1565,10 @@ function startSolo(v, button){
     a.volume = targetVol * (t*t);
     if (t>=1){ clearInterval(soloFadeTimer); soloFadeTimer=null; }
   }, 40);
-  document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent='\u25b6 独奏'});
-  if(button){button.classList.add('active');button.textContent='\u23f8 停止独奏';}
-  const nsBtn=$("#nsAudBtn"); if(nsBtn) nsBtn.textContent='\u23f8 停止独奏';
-  if(p) p.catch(err=>{ console.warn('独奏播放失败:',err); if(button) button.textContent='\u25b6 重试独奏'; if(err.name==="NotAllowedError"){ audioBlocked=true; showAudHint(); } });
+  document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent=T('\u25b6 独奏','\u25b6 Solo')});
+  if(button){button.classList.add('active');button.textContent=T('\u23f8 停止独奏','\u23f8 Stop solo');}
+  const nsBtn=$("#nsAudBtn"); if(nsBtn) nsBtn.textContent=T('\u23f8 停止独奏','\u23f8 Stop solo');
+  if(p) p.catch(err=>{ console.warn('独奏播放失败:',err); if(button) button.textContent=T('\u25b6 重试独奏','\u25b6 Retry solo'); if(err.name==="NotAllowedError"){ audioBlocked=true; showAudHint(); } });
 }
 /* ---------- controls ---------- */
 $("#begin").addEventListener("click", async ()=>{
@@ -1447,11 +1645,11 @@ function openNoteScroll(id){
   const iucnColor = sp.iucn==="CR"?"var(--cr)":sp.iucn==="EN"?"var(--en)":sp.iucn==="VU"?"var(--vu)":"var(--ink-faint)";
 
   /* === Build full-width scroll detail === */
-  let h='<button class="ds-close" aria-label="关闭">✕</button>';
+  let h='<button class="ds-close" aria-label="'+T("关闭","Close")+'">✕</button>';
 
   /* Hero image */
   h+='<div class="ds-hero">';
-  h+='<img src="'+(sp.image||"img/"+id+".jpg")+'" alt="'+sp.zh+'" style="object-position:'+(sp.focus||'center')+'">';
+  h+='<img src="'+(sp.image||"img/"+id+".jpg")+'" alt="'+(LANG==='en' && sp.en ? sp.en : sp.zh)+'" style="object-position:'+(sp.focus||'center')+'">';
   h+='</div>';
 
   /* Inner content */
@@ -1459,12 +1657,12 @@ function openNoteScroll(id){
 
   /* Names + tags */
   h+='<div class="ds-names">';
-  h+='<div class="ds-zh">'+sp.zh+'</div>';
-  h+='<div class="ds-en">'+sp.en+'</div>';
+  h+='<div class="ds-zh">'+(LANG==='en' && sp.en ? sp.en : sp.zh)+'</div>';
+  h+='<div class="ds-en">'+(LANG==='en' && sp.en ? sp.sci : sp.en)+'</div>';
   h+='<div class="ds-sci">'+sp.sci+'</div>';
   h+='<div class="ds-tag-row">';
-  h+='<span class="ds-tag" style="color:'+iucnColor+';border-color:'+iucnColor+'">'+sp.iucnZh+(sp.iucn!=="—"?" ("+sp.iucn+")":"")+'</span>';
-  h+='<span class="ds-tag" style="color:var(--ink-faint);border-color:var(--line)">'+SECTIONS[sp.section].zh+' · '+sp.voice+'</span>';
+  h+='<span class="ds-tag" style="color:'+iucnColor+';border-color:'+iucnColor+'">'+(LANG==='en' ? sp.iucnEn : sp.iucnZh)+(sp.iucn!=="—"?" ("+sp.iucn+")":"")+'</span>';
+  h+='<span class="ds-tag" style="color:var(--ink-faint);border-color:var(--line)">'+(LANG==='en' ? SECTIONS[sp.section].en+' · '+sp.voiceEn : SECTIONS[sp.section].zh+' · '+sp.voice)+'</span>';
   h+='</div></div>';
 
   /* Full sparkline (700×110) */
@@ -1499,7 +1697,7 @@ function openNoteScroll(id){
   } else {
     h+='<svg viewBox="0 0 '+sparkW+' '+sparkH+'" preserveAspectRatio="xMidYMid meet">';
     h+='<line x1="'+sparkPad+'" y1="'+sparkH/2+'" x2="'+(sparkW-sparkPad)+'" y2="'+sparkH/2+'" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="4 3" opacity=".3"/>';
-    h+='<text x="'+sparkW/2+'" y="'+(sparkH/2+4)+'" text-anchor="middle" fill="var(--ink-faint)" font-size="12" font-family="var(--mono)">无时间序列数据</text>';
+    h+='<text x="'+sparkW/2+'" y="'+(sparkH/2+4)+'" text-anchor="middle" fill="var(--ink-faint)" font-size="12" font-family="var(--mono)">'+T("无时间序列数据","No time-series data")+'</text>';
     h+='</svg>';
   }
   h+='</div>';
@@ -1507,93 +1705,93 @@ function openNoteScroll(id){
   /* Data grid (all fields) */
   h+='<div class="ds-data-grid">';
   /* Current value */
-  let metricVal="未监测", metricLabel="当前状态";
+  let metricVal=T("未监测","unmonitored"), metricLabel=T("当前状态","Current status");
   if (v){
     const {level,state}=levelAt(v,year);
-    if (state==="pre"){ metricVal="未监测"; metricLabel="当前状态"; }
-    else if (state==="post"){ metricVal="数据止于 "+v.last; metricLabel="数据窗口"; }
-    else if (v.kind==="index"){ metricVal=Math.round(level*100)+" 指数"; metricLabel="种群指数（基线=100）"; }
+    if (state==="pre"){ metricVal=T("未监测","unmonitored"); metricLabel=T("当前状态","Current status"); }
+    else if (state==="post"){ metricVal=T("数据止于 ","data ends ")+v.last; metricLabel=T("数据窗口","Data window"); }
+    else if (v.kind==="index"){ metricVal=Math.round(level*100)+T(" 指数"," index"); metricLabel=T("种群指数（基线=100）","Population index (baseline=100)"); }
     else if (v.kind==="count"){
       const p=v.series; let val=null;
       for(let i=0;i<p.length;i++) if(year>=p[i].year) val=p[i];
       metricVal = val? val.label : "";
-      metricLabel = "种群数量估计";
-    } else if (v.kind==="none") { metricVal = v.sp.id==="bumblebee"?"无时间序列":"未核实"; metricLabel="数据状态"; }
+      metricLabel = T("种群数量估计","Population estimate");
+    } else if (v.kind==="none") { metricVal = v.sp.id==="bumblebee"?T("无时间序列","no time series"):T("未核实","unverified"); metricLabel=T("数据状态","Data status"); }
   }
   h+='<div class="ds-metric"><span class="ds-metric-label">'+metricLabel+'</span><span class="ds-metric-val">'+metricVal+'</span></div>';
 
   /* Scope */
-  if (sp.scope) h+='<div class="ds-metric"><span class="ds-metric-label">统计范围</span><span class="ds-metric-val small">'+sp.scope+'</span></div>';
+  if (sp.scope) h+='<div class="ds-metric"><span class="ds-metric-label">'+T("统计范围","Scope")+'</span><span class="ds-metric-val small">'+(LANG==='en'&&sp.scopeEn?sp.scopeEn:sp.scope)+'</span></div>';
 
   /* Baseline */
-  if (sp.baseline) h+='<div class="ds-metric"><span class="ds-metric-label">历史基线</span><span class="ds-metric-val small">'+(sp.baseline.low===sp.baseline.high?fmtNum(sp.baseline.low):fmtNum(sp.baseline.low)+"–"+fmtNum(sp.baseline.high))+'</span></div>';
+  if (sp.baseline) h+='<div class="ds-metric"><span class="ds-metric-label">'+T("历史基线","Baseline")+'</span><span class="ds-metric-val small">'+(LANG==='en'&&sp.baseline.noteEn?sp.baseline.noteEn:(sp.baseline.low===sp.baseline.high?fmtNum(sp.baseline.low):fmtNum(sp.baseline.low)+"–"+fmtNum(sp.baseline.high)))+'</span></div>';
 
   /* Pct of baseline */
-  if (sp.pctOfBaseline) h+='<div class="ds-metric"><span class="ds-metric-label">占基线</span><span class="ds-metric-val small">'+sp.pctOfBaseline+'</span></div>';
+  if (sp.pctOfBaseline) h+='<div class="ds-metric"><span class="ds-metric-label">'+T("占基线","% of baseline")+'</span><span class="ds-metric-val small">'+(LANG==='en'&&sp.pctOfBaselineEn?sp.pctOfBaselineEn:sp.pctOfBaseline)+'</span></div>';
 
   /* Rate */
-  if (sp.rate) h+='<div class="ds-metric"><span class="ds-metric-label">变化率</span><span class="ds-metric-val small">'+(sp.rate.pct>0?"+":"")+sp.rate.pct+'%/年</span>'+(sp.rate.ci?'<span class="ds-metric-note">CI ['+sp.rate.ci[0]+', '+sp.rate.ci[1]+']</span>':'')+'</div>';
+  if (sp.rate) h+='<div class="ds-metric"><span class="ds-metric-label">'+T("变化率","Rate of change")+'</span><span class="ds-metric-val small">'+(sp.rate.pct>0?"+":"")+sp.rate.pct+T('%/年','%/yr')+'</span>'+(LANG==='en'&&sp.rate.noteEn?'<span class="ds-metric-note">'+sp.rate.noteEn+'</span>':(sp.rate.ci?'<span class="ds-metric-note">CI ['+sp.rate.ci[0]+', '+sp.rate.ci[1]+']</span>':''))+'</div>';
 
   /* Long-term */
-  if (sp.longTerm) h+='<div class="ds-metric"><span class="ds-metric-label">长期趋势</span><span class="ds-metric-val small" style="color:var(--fading)">'+sp.longTerm.period+' · −'+sp.longTerm.pct+'%</span>'+(sp.longTerm.basis?'<span class="ds-metric-note">'+sp.longTerm.basis+'</span>':'')+'</div>';
+  if (sp.longTerm) h+='<div class="ds-metric"><span class="ds-metric-label">'+T("长期趋势","Long-term trend")+'</span><span class="ds-metric-val small" style="color:var(--fading)">'+(LANG==='en'&&sp.longTerm.periodEn?sp.longTerm.periodEn:sp.longTerm.period)+' · −'+sp.longTerm.pct+'%</span>'+(LANG==='en'&&sp.longTerm.noteEn?'<span class="ds-metric-note">'+sp.longTerm.noteEn+'</span>':(sp.longTerm.basis?'<span class="ds-metric-note">'+sp.longTerm.basis+'</span>':''))+'</div>';
 
   /* Current value */
-  if (sp.current) h+='<div class="ds-metric"><span class="ds-metric-label">当前规模</span><span class="ds-metric-val small">'+sp.current.value+'</span></div>';
+  if (sp.current) h+='<div class="ds-metric"><span class="ds-metric-label">'+T("当前规模","Current size")+'</span><span class="ds-metric-val small">'+sp.current.value+'</span></div>';
 
   /* Data ends */
-  if (sp.dataEnds) h+='<div class="ds-metric"><span class="ds-metric-label">数据截止</span><span class="ds-metric-val small">'+sp.dataEnds+'</span></div>';
+  if (sp.dataEnds) h+='<div class="ds-metric"><span class="ds-metric-label">'+T("数据截止","Data ends")+'</span><span class="ds-metric-val small">'+sp.dataEnds+'</span></div>';
 
   /* Trend */
-  h+='<div class="ds-metric"><span class="ds-metric-label">趋势判断</span><span class="ds-metric-val small">'+sp.trend+'</span></div>';
+  h+='<div class="ds-metric"><span class="ds-metric-label">'+T("趋势判断","Trend")+'</span><span class="ds-metric-val small">'+sp.trend+'</span></div>';
 
   h+='</div>'; /* end data grid */
 
   /* Tipping (if present) */
   if (sp.tipping){
     h+='<div class="ds-metric" style="grid-column:1/-1;padding-top:8px;border-top:1px solid var(--line-soft)">';
-    h+='<span class="ds-metric-label">临界点风险</span>';
-    h+='<span class="ds-metric-val small" style="color:var(--cr)">'+sp.tipping.report+' · '+sp.tipping.threshold+'</span>';
-    h+='<span class="ds-metric-note" style="font-size:11px;line-height:1.6;color:var(--ink-dim);margin-top:4px">'+sp.tipping.text+'</span>';
-    if (sp.tipping.nuance) h+='<span class="ds-metric-note" style="font-size:10px;line-height:1.5;color:var(--ink-faint);margin-top:4px">'+sp.tipping.nuance+'</span>';
+    h+='<span class="ds-metric-label">'+T("临界点风险","Tipping-point risk")+'</span>';
+    h+='<span class="ds-metric-val small" style="color:var(--cr)">'+sp.tipping.report+' · '+(LANG==='en'&&sp.tipping.thresholdEn?sp.tipping.thresholdEn:sp.tipping.threshold)+'</span>';
+    h+='<span class="ds-metric-note" style="font-size:11px;line-height:1.6;color:var(--ink-dim);margin-top:4px">'+(LANG==='en'&&sp.tipping.textEn?sp.tipping.textEn:sp.tipping.text)+'</span>';
+    if (sp.tipping.nuance) h+='<span class="ds-metric-note" style="font-size:10px;line-height:1.5;color:var(--ink-faint);margin-top:4px">'+(LANG==='en'&&sp.tipping.nuanceEn?sp.tipping.nuanceEn:sp.tipping.nuance)+'</span>';
     h+='</div>';
   }
 
   /* Extra (if present) */
   if (sp.extra){
     h+='<div class="ds-metric" style="grid-column:1/-1;padding-top:8px;border-top:1px solid var(--line-soft)">';
-    h+='<span class="ds-metric-label">补充说明</span>';
-    h+='<span class="ds-metric-note" style="font-size:11px;line-height:1.6;color:var(--ink-dim)">'+sp.extra+'</span>';
+    h+='<span class="ds-metric-label">'+T("补充说明","Notes")+'</span>';
+    h+='<span class="ds-metric-note" style="font-size:11px;line-height:1.6;color:var(--ink-dim)">'+(LANG==='en'&&sp.extraEn?sp.extraEn:sp.extra)+'</span>';
     h+='</div>';
   }
 
   /* Trend description */
   h+='<div class="ds-trend-desc">';
-  if (sp.trend==="recovering") h+='<b>种群正在恢复。</b>';
-  else if (sp.trend==="recovering-critical") h+='<b>极度濒危中的恢复尝试。</b>';
-  else if (sp.trend==="declining") h+='<b>种群仍在下降。</b>';
-  else if (sp.trend==="tipping-risk") h+='<b>面临生态系统临界点风险。</b>';
-  else h+='<b>状态待定。</b>';
+  if (sp.trend==="recovering") h+='<b>'+T("种群正在恢复。","Population recovering.")+'</b>';
+  else if (sp.trend==="recovering-critical") h+='<b>'+T("极度濒危中的恢复尝试。","Recovery attempt amid critical endangerment.")+'</b>';
+  else if (sp.trend==="declining") h+='<b>'+T("种群仍在下降。","Population still declining.")+'</b>';
+  else if (sp.trend==="tipping-risk") h+='<b>'+T("面临生态系统临界点风险。","At risk of an ecosystem tipping point.")+'</b>';
+  else h+='<b>'+T("状态待定。","Status uncertain.")+'</b>';
   h+='</div>';
 
   /* Credits section */
   h+='<div class="ds-credits">';
   if(ca){
-    h+='<div class="ds-credit-line"><b>录音</b> '+ca.file+' · '+ca.by+' · '+ca.lic;
-    if (ca.src) h+=' · <a href="'+ca.src+'" target="_blank" rel="noopener">来源 ↗</a>';
+    h+='<div class="ds-credit-line"><b>'+T("录音","Audio")+'</b> '+ca.file+' · '+ca.by+' · '+ca.lic;
+    if (ca.src) h+=' · <a href="'+ca.src+'" target="_blank" rel="noopener">'+T("来源 ↗","Source ↗")+'</a>';
     h+='</div>';
-    if (ca.warn) h+='<div class="ds-credit-line" style="color:var(--fading)">⚠ 已改动：'+ca.warn+'</div>';
+    if (ca.warn) h+='<div class="ds-credit-line" style="color:var(--fading)">'+T("⚠ 已改动：","⚠ Modified: ")+ca.warn+'</div>';
   } else {
-    h+='<div class="ds-credit-line"><b>录音</b> 当前没有经过核实的真实录音</div>';
+    h+='<div class="ds-credit-line"><b>'+T("录音","Audio")+'</b> '+T("当前没有经过核实的真实录音","No verified real recording available")+'</div>';
   }
   if(ci){
-    h+='<div class="ds-credit-line"><b>照片</b> '+ci.by+' · '+ci.lic;
-    if (ci.src) h+=' · <a href="'+ci.src+'" target="_blank" rel="noopener">来源 ↗</a>';
+    h+='<div class="ds-credit-line"><b>'+T("照片","Photo")+'</b> '+ci.by+' · '+ci.lic;
+    if (ci.src) h+=' · <a href="'+ci.src+'" target="_blank" rel="noopener">'+T("来源 ↗","Source ↗")+'</a>';
     h+='</div>';
   }
-  if (sp.audioNote) h+='<div class="ds-credit-line" style="opacity:.7">'+sp.audioNote+'</div>';
+  if (sp.audioNote) h+='<div class="ds-credit-line" style="opacity:.7">'+(LANG==='en'&&sp.audioNoteEn?sp.audioNoteEn:sp.audioNote)+'</div>';
   /* Research sources */
   if (sp.sources && sp.sources.length){
-    h+='<div class="ds-credit-line"><b>研究来源</b> ';
+    h+='<div class="ds-credit-line"><b>'+T("研究来源","Research sources")+'</b> ';
     h+=sp.sources.map(src=>{
       let link='';
       if (src.url) link='<a href="'+src.url+'" target="_blank" rel="noopener">'+src.t+' ↗</a>';
@@ -1608,8 +1806,8 @@ function openNoteScroll(id){
 
   /* Solo row */
   h+='<div class="ds-solo-row">';
-  h+='<button class="ds-solo" type="button">▶ 独奏</button>';
-  h+='<span class="ds-hint">点击聆听此声部</span>';
+  h+='<button class="ds-solo" type="button">'+T('▶ 独奏','▶ Solo')+'</button>';
+  h+='<span class="ds-hint">'+T('点击聆听此声部','Click to hear this voice')+'</span>';
   h+='</div>';
 
   h+='</div>'; /* end ds-inner */
@@ -1726,7 +1924,7 @@ function closeDetailScroll(){
   if (soloFadeTimer){ clearInterval(soloFadeTimer); soloFadeTimer=null; }
   soloVoice=null;
   VOICES.forEach(v=>{ if(v.audio){ v.audio.pause(); v.audio.muted=false; } });
-  document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent='\u25b6 独奏'});
+  document.querySelectorAll('.solo-track-btn').forEach(b=>{b.classList.remove('active');b.textContent=T('\u25b6 独奏','\u25b6 Solo')});
 }
 
 /* Alias for backward compatibility */
@@ -1755,14 +1953,14 @@ $("#notesOverlay").addEventListener("click", e=>{ if(e.target===$("#notesOverlay
 
 /* ---------- programme notes from verified LPI object ---------- */
 $("#lpiBig").textContent = "\u2212"+LPI.headline+"%";
-$("#lpiWhat").innerHTML = LPI.whatItIs.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
-$("#lpiCaveat").textContent = LPI.caveat;
+$("#lpiWhat").innerHTML = (LANG==='en' ? LPI.whatItIsEn : LPI.whatItIs).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+$("#lpiCaveat").textContent = LANG==='en' ? LPI.caveatEn : LPI.caveat;
 {
   let h='<p style="font-size:12.3px;color:var(--ink-dim);margin-top:4px">'+
-    '<b>按生境</b>（'+LPI.period+'，'+LPI.edition+'）</p><ul style="font-size:12.2px">';
-  LPI.realms.forEach(r=>h+='<li>'+r.k+' <b style="color:var(--fading);font-family:var(--mono)">−'+r.v+'%</b></li>');
-  h+='</ul><p style="font-size:12.3px;color:var(--ink-dim);margin-top:10px"><b>按区域</b></p><ul style="font-size:12.2px">';
-  LPI.regions.forEach(r=>h+='<li>'+r.k+' <b style="color:var(--fading);font-family:var(--mono)">−'+r.v+'%</b></li>');
+    '<b>'+T("按生境","By habitat")+'</b>（'+LPI.period+'，'+(LANG==='en'?LPI.editionEn:LPI.edition)+'）</p><ul style="font-size:12.2px">';
+  LPI.realms.forEach(r=>h+='<li>'+(LANG==='en'?r.kEn:r.k)+' <b style="color:var(--fading);font-family:var(--mono)">−'+r.v+'%</b></li>');
+  h+='</ul><p style="font-size:12.3px;color:var(--ink-dim);margin-top:10px"><b>'+T("按区域","By region")+'</b></p><ul style="font-size:12.2px">';
+  LPI.regions.forEach(r=>h+='<li>'+(LANG==='en'?r.kEn:r.k)+' <b style="color:var(--fading);font-family:var(--mono)">−'+r.v+'%</b></li>');
   h+='</ul>';
   $("#lpiBreak").innerHTML=h;
 }
