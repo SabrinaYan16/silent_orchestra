@@ -413,7 +413,7 @@ html,body{overflow:hidden;height:100vh}
   background:#0c0f18;border:1px solid var(--line-soft);border-radius:8px;
   transition:opacity .5s ease;
   opacity:0;pointer-events:none;flex-shrink:0;position:fixed;z-index:50;
-  top:139px;bottom:0;left:50%;transform:translateX(-50%);
+  top:139px;bottom:142px;left:50%;transform:translateX(-50%);
   overflow-y:auto;overflow-x:hidden;
   box-shadow:0 0 80px rgba(0,0,0,.7),inset 0 0 40px rgba(232,178,92,.015)}
 .detail-scroll.open{opacity:1;pointer-events:auto}
@@ -445,7 +445,7 @@ html,body{overflow:hidden;height:100vh}
   background:linear-gradient(180deg,transparent 50%,rgba(12,15,24,.9) 100%)}
 
 /* inner content */
-.ds-inner{padding:16px 28px 20px;display:flex;flex-direction:column;gap:0}
+.ds-inner{padding:16px 28px 28px;display:flex;flex-direction:column;gap:0}
 
 /* staggered reveal: all content sections start hidden */
 .ds-hero,.ds-names,.ds-spark,.ds-data-grid,.ds-trend-desc,.ds-credits,.ds-solo-row{
@@ -703,7 +703,7 @@ html,body{overflow:hidden;height:100vh}
     <button class="ctl" id="restartBtn">↺ 重新开始</button>
     <div class="vol">
       <span>音量</span>
-      <input type="range" class="v" id="vol" min="0" max="100" value="35" aria-label="总音量">
+      <input type="range" class="v" id="vol" min="0" max="100" value="50" aria-label="总音量">
     </div>
     <div class="legend">
       <span><i style="background:var(--alive)"></i>有数据</span>
@@ -1224,7 +1224,7 @@ function setVoiceGain(v, g){
 }
 
 /* ---------- clock ---------- */
-let year=Y0, playing=false, masterVol=.35, lastT=0;
+let year=Y0, playing=false, masterVol=.5, lastT=0;
 let soloVoice=null;
 const YEARS_PER_SEC = 4.6;
 const scrub = $("#scrub"), axisFill = $("#axisFill"), head = $("#head");
@@ -1260,9 +1260,9 @@ function render(){
   VOICES.forEach(v=>{
     const {level,state}=levelAt(v,year);
     let gain=0, lit=false;
-    if (state==="in"){ gain=0.18 + level*0.74; lit=true; }
-    else if (state==="post"){ gain=0.12 + level*0.10; lit=true; }
-    else { gain=0.16; lit=true; }
+if (state==="in"){ gain=0.25 + level*0.55; lit=true; }
+    else if (state==="post"){ gain=0.18 + level*0.12; lit=true; }
+    else { gain=0.22; lit=true; }
 
     if (v.audio){
       const allowed = soloVoice === null || soloVoice === v;
@@ -1402,7 +1402,7 @@ $("#begin").addEventListener("click", async ()=>{
       });
     }
   });
-  ensembleFade={t0:performance.now(),dur:2500,to:0.20};
+  ensembleFade={t0:performance.now(),dur:2500,to:0.35};
   if (AC && AC.state==="suspended"){ try{ await AC.resume(); }catch(e){} }
   setPlaying(true);
   requestAnimationFrame(frame);
