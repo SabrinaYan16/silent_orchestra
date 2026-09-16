@@ -35,7 +35,7 @@ body{min-height:100vh}
 
 /* --- curtain / opening --- */
 #curtain{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:center;
-  background:transparent;pointer-events:none;overflow-y:auto}
+  background:#080a12;pointer-events:none;overflow-y:auto}
 #curtain:not(.up){pointer-events:auto}
 #curtain.up{visibility:hidden;pointer-events:none}
 
@@ -548,6 +548,7 @@ html,body{overflow:hidden;height:100vh}
   color:var(--ink-faint);cursor:pointer;transition:.25s;line-height:1.2}
 .lang-btn:hover{border-color:var(--amber);color:var(--amber)}
 .lang-btn.active{border-color:var(--amber);color:var(--amber-hot);background:rgba(232,178,92,.09)}
+.curtain-lang{justify-content:center;margin-bottom:24px}
 
 /* --- scroll progress bar --- */
 .scroll-progress{position:fixed;bottom:138px;left:0;right:0;height:3px;z-index:91;
@@ -641,6 +642,10 @@ html,body{overflow:hidden;height:100vh}
   <div class="curtain-left"></div>
   <div class="curtain-right"></div>
   <div class="card">
+    <div class="lang-switch curtain-lang">
+      <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    </div>
     <div class="eyebrow">Twenty voices · One held note · 1970 → 2050</div>
     <h1>寂静的乐团<span class="en">The Silent Orchestra</span></h1>
     <p class="lede" data-i18n="curtain-lede">
